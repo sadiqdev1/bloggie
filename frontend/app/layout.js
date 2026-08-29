@@ -1,5 +1,7 @@
 import { Inter, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
+import RouteProgress from "@/app/components/ui/RouteProgress";
 
 // ── Fonts ─────────────────────────────────────────────────────────────────────
 const inter = Inter({
@@ -82,7 +84,12 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${bricolage.variable} light h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

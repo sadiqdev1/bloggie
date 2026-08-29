@@ -6,17 +6,20 @@
  * post grid, follow CTA, social links.
  */
 
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MapPin, Link2, Twitter, Github, ArrowRight,
+  MapPin, Link2, ArrowRight,
   Heart, BookOpen, UserPlus, Check, MoreHorizontal,
   Bookmark, Clock, Eye,
 } from 'lucide-react';
+import { FaXTwitter } from 'react-icons/fa6';
+import { FaGithub   } from 'react-icons/fa6';
 import Link      from 'next/link';
 import NextImage from 'next/image';
 
 import AuthNavbar    from '@/app/components/AuthNavbar';
+import AuthMobileNav from '@/app/components/AuthMobileNav';
 import Footer        from '@/app/components/Footer';
 import Reveal        from '@/app/components/ui/Reveal';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
@@ -111,12 +114,20 @@ function Stat({ value, label }) {
 export default function AuthorPage({ params }) {
   const [following, setFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('Posts');
+  const [coverBlur, setCoverBlur] = useState(0); // 0–12px driven by scroll
   const coverRef = useRef(null);
 
-  /* Parallax cover */
-  const { scrollY } = useScroll();
-  const rawY  = useTransform(scrollY, [0, 400], [0, 80]);
-  const coverY = useSpring(rawY, { stiffness: 60, damping: 20, mass: 0.8 });
+  // Scroll-driven blur on the cover image (no movement, just blur)
+  useEffect(() => {
+    const onScroll = () => {
+      const scrolled = window.scrollY;
+      // blur increases 0→10px over first 200px of scroll
+      const blur = Math.min(10, (scrolled / 200) * 10);
+      setCoverBlur(blur);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const FOLLOWERS = [
     { name:'James Okafor',  initials:'JO', color:'#8b5cf6', role:'Tech writer'       },
@@ -129,16 +140,16 @@ export default function AuthorPage({ params }) {
     <>
       <ScrollProgress />
       <AuthNavbar />
+      <AuthMobileNav />
 
-      <main className="pt-16 min-h-screen" style={{ background:'var(--bg)' }}>
+      <main className="pt-14 pb-16 md:pb-0 min-h-screen" style={{ background:'var(--bg)' }}>
 
-        {/* ── Cover ── */}
+        {/* ── Cover — static image, scroll-driven blur ── */}
         <div className="relative overflow-hidden" style={{ height:'clamp(200px,32vh,340px)' }} ref={coverRef}>
-          <motion.div className="absolute inset-0 will-change-transform" style={{ y: coverY }}>
-            <NextImage src={AUTHOR.cover} alt="Cover photo" fill priority
-              sizes="100vw" className="object-cover"
-              placeholder="blur" blurDataURL={AUTHOR.coverBlur} />
-          </motion.div>
+          <NextImage src={AUTHOR.cover} alt="Cover photo" fill priority
+            sizes="100vw" className="object-cover"
+            placeholder="blur" blurDataURL={AUTHOR.coverBlur}
+            style={{ filter: `blur(${coverBlur}px)`, transform:'scale(1.04)', transition:'filter 0.05s linear' }} />
           <div className="absolute inset-0"
                style={{ background:'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 100%)' }} />
         </div>
@@ -161,7 +172,7 @@ export default function AuthorPage({ params }) {
               <motion.button
                 onClick={() => setFollowing(f => !f)}
                 whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }}
-                className="h-10 px-5 rounded-xl text-sm font-semibold flex items-center gap-2"
+                className="h-10 px-5 rounded-xl text-sm font-semibold flex items-center gap-2 cursor-pointer"
                 style={{
                   background: following ? 'var(--bg-card)' : 'var(--accent)',
                   color:      following ? 'var(--fg-2)'   : '#fff',
@@ -172,7 +183,7 @@ export default function AuthorPage({ params }) {
                   : <><UserPlus size={13} strokeWidth={2.5} /> Follow</>}
               </motion.button>
               <motion.button whileHover={{ scale:1.06 }} whileTap={{ scale:0.94 }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center border"
+                className="w-10 h-10 rounded-xl flex items-center justify-center border cursor-pointer"
                 style={{ borderColor:'var(--border)', color:'var(--fg-3)', background:'var(--bg-card)' }}>
                 <MoreHorizontal size={16} strokeWidth={2} />
               </motion.button>
@@ -199,7 +210,7 @@ export default function AuthorPage({ params }) {
               </a>
               <a href={`https://x.com/${AUTHOR.twitter}`} target="_blank" rel="noreferrer"
                  className="flex items-center gap-1.5 transition-colors hover:text-[var(--accent)]">
-                <Twitter size={13} /> {AUTHOR.twitter}
+                <FaXTwitter size={13} />  {AUTHOR.twitter}
               </a>
               <span>Joined {AUTHOR.joined}</span>
             </div>
@@ -268,9 +279,9 @@ export default function AuthorPage({ params }) {
                 <div className="p-6 rounded-2xl border space-y-3" style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
                   <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color:'var(--accent)' }}>Links</p>
                   {[
-                    { icon: Link2,   label:'Website',  value:'sofiareyes.design', href: AUTHOR.website    },
-                    { icon: Twitter, label:'Twitter',  value: AUTHOR.twitter,     href:`https://x.com/sofiareyes` },
-                    { icon: Github,  label:'GitHub',   value: AUTHOR.github,      href:`https://github.com/${AUTHOR.github}` },
+                    { icon: Link2,      label:'Website',  value:'sofiareyes.design', href: AUTHOR.website    },
+                    { icon: FaXTwitter, label:'Twitter',  value: AUTHOR.twitter,     href:`https://x.com/sofiareyes` },
+                    { icon: FaGithub,   label:'GitHub',   value: AUTHOR.github,      href:`https://github.com/${AUTHOR.github}` },
                   ].map(({ icon: Icon, label, value, href }) => (
                     <a key={label} href={href} target="_blank" rel="noreferrer"
                        className="flex items-center gap-3 text-sm transition-colors hover:text-[var(--accent)]"

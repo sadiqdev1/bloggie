@@ -2,38 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Check, AlertCircle, CheckCircle2 } from 'lucide-react';
 import AppLogo     from '@/app/components/AppLogo';
 import MagneticBtn from '@/app/components/ui/MagneticBtn';
 import Blob        from '@/app/components/ui/Blob';
 
-// ─── Shared field ────────────────────────────────────────────────────────────
+// ─── Field ────────────────────────────────────────────────────────────────────
 function Field({ id, label, type='text', value, onChange, error, placeholder, autoComplete, suffix, hint }) {
   const [focused, setFocused] = useState(false);
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium" style={{ color:'var(--fg-2)' }}>{label}</label>
       <div className="relative">
-        <input
-          id={id} type={type} value={value} onChange={onChange}
+        <input id={id} type={type} value={value} onChange={onChange}
           placeholder={placeholder} autoComplete={autoComplete}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           className="w-full h-11 px-4 rounded-xl text-sm border outline-none transition-all"
           style={{
-            background:   'var(--bg-input)',
-            color:        'var(--fg)',
+            background:   'var(--bg-input)', color: 'var(--fg)',
             borderColor:  error ? '#ef4444' : focused ? 'var(--accent)' : 'var(--border-input)',
             boxShadow:    error ? '0 0 0 3px rgba(239,68,68,0.12)' : focused ? '0 0 0 3px var(--accent-dim)' : 'none',
             paddingRight: suffix ? '48px' : '16px',
           }} />
-        {suffix && (
-          <div className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center">{suffix}</div>
-        )}
+        {suffix && <div className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center">{suffix}</div>}
       </div>
-      {hint && !error && (
-        <p className="text-xs" style={{ color:'var(--fg-4)' }}>{hint}</p>
-      )}
+      {hint && !error && <p className="text-xs" style={{ color:'var(--fg-4)' }}>{hint}</p>}
       <AnimatePresence>
         {error && (
           <motion.p initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
@@ -46,36 +41,30 @@ function Field({ id, label, type='text', value, onChange, error, placeholder, au
   );
 }
 
-// ─── Password strength meter ──────────────────────────────────────────────────
+// ─── Password strength ────────────────────────────────────────────────────────
 function PasswordStrength({ password }) {
   const checks = [
-    { label:'8+ characters',             pass: password.length >= 8         },
-    { label:'Uppercase letter',           pass: /[A-Z]/.test(password)       },
-    { label:'Number or symbol',           pass: /[0-9!@#$%^&*]/.test(password) },
+    { label:'8+ characters', pass: password.length >= 8 },
+    { label:'Uppercase',      pass: /[A-Z]/.test(password) },
+    { label:'Number / symbol',pass: /[0-9!@#$%^&*]/.test(password) },
   ];
   const score  = checks.filter(c => c.pass).length;
   const colors = ['#ef4444','#f97316','#22c55e'];
-  const labels = ['Weak','Fair','Strong'];
-
   if (!password) return null;
-
   return (
     <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }}
       exit={{ opacity:0, height:0 }} transition={{ duration:0.2 }} className="space-y-2">
-      {/* Bar */}
       <div className="flex gap-1.5">
         {Array.from({length:3}).map((_,i) => (
-          <motion.div key={i}
-            initial={{ scaleX:0 }} animate={{ scaleX: i < score ? 1 : 0 }}
-            transition={{ duration:0.3, delay: i*0.06 }}
+          <motion.div key={i} initial={{ scaleX:0 }} animate={{ scaleX: i < score ? 1 : 0 }}
+            transition={{ duration:0.3, delay:i*0.06 }}
             className="h-1 flex-1 rounded-full origin-left"
             style={{ background: i < score ? colors[score-1] : 'var(--border-2)' }} />
         ))}
       </div>
-      {/* Checklist */}
       <div className="flex gap-3 flex-wrap">
         {checks.map(({ label, pass }) => (
-          <span key={label} className="flex items-center gap-1 text-xs transition-colors"
+          <span key={label} className="flex items-center gap-1 text-xs"
                 style={{ color: pass ? '#22c55e' : 'var(--fg-4)' }}>
             <CheckCircle2 size={11} strokeWidth={2} style={{ color: pass ? '#22c55e' : 'var(--fg-4)' }} />
             {label}
@@ -95,75 +84,133 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// ─── Step indicator ───────────────────────────────────────────────────────────
-function StepDots({ current, total }) {
-  return (
-    <div className="flex items-center gap-2">
-      {Array.from({length: total}).map((_,i) => (
-        <motion.div key={i}
-          animate={{
-            width:      i === current ? '24px' : '8px',
-            background: i <= current ? 'var(--accent)' : 'var(--border-2)',
-          }}
-          transition={{ duration:0.3, ease:[0.16,1,0.3,1] }}
-          className="h-1.5 rounded-full" />
-      ))}
-    </div>
-  );
-}
+const BENEFITS = [
+  'Publish unlimited posts — always free',
+  'Custom profile with your own URL',
+  'Grow an audience, earn followers',
+  'Full data export whenever you want',
+];
 
 export default function RegisterPage() {
-  const [step,    setStep]    = useState(0); // 0=account, 1=profile
-  const [form,    setForm]    = useState({ name:'', email:'', password:'', confirmPassword:'' });
-  const [errors,  setErrors]  = useState({});
-  const [showPw,  setShowPw]  = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [done,    setDone]    = useState(false);
+  const router = useRouter();
+  const [form,    setForm]   = useState({ name:'', email:'', password:'', confirmPassword:'' });
+  const [errors,  setErrors] = useState({});
+  const [showPw,  setShowPw] = useState(false);
+  const [loading, setLoading]= useState(false);
 
-  const set = (k) => (e) => {
-    setForm(p => ({ ...p, [k]: e.target.value }));
-    setErrors(p => ({ ...p, [k]:'' }));
-  };
+  const set = (k) => (e) => { setForm(p=>({...p,[k]:e.target.value})); setErrors(p=>({...p,[k]:''})); };
 
-  const validateStep0 = () => {
+  const validate = () => {
     const e = {};
-    if (!form.name.trim())                       e.name    = 'Name is required.';
-    if (!form.email.includes('@'))               e.email   = 'Enter a valid email.';
-    if (form.password.length < 8)                e.password = 'At least 8 characters required.';
-    if (form.password !== form.confirmPassword)  e.confirmPassword = 'Passwords do not match.';
+    if (!form.name.trim())                      e.name            = 'Name is required.';
+    if (!form.email.includes('@'))              e.email           = 'Enter a valid email.';
+    if (form.password.length < 8)               e.password        = 'At least 8 characters required.';
+    if (form.password !== form.confirmPassword) e.confirmPassword = 'Passwords do not match.';
     return e;
-  };
-
-  const handleNext = (ev) => {
-    ev.preventDefault();
-    const e = validateStep0();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    setStep(1);
   };
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise(r => setTimeout(r, 900));
     setLoading(false);
-    setDone(true);
+    // Redirect to dedicated onboarding page
+    router.push('/onboarding');
   };
-
-  const BENEFITS = [
-    'Publish unlimited posts — always free',
-    'Custom profile with your own URL',
-    'Grow an audience, earn followers',
-    'Full data export whenever you want',
-  ];
 
   return (
     <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
-      {/* ── Left — visual ── */}
+
+      {/* ── LEFT — form (always left on desktop) ── */}
+      <div className="flex flex-col flex-1 min-h-screen px-6 py-10 lg:max-w-[480px]">
+        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}>
+          <AppLogo size="md" />
+        </motion.div>
+
+        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-10">
+          <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
+            transition={{ duration:0.45, ease:[0.16,1,0.3,1] }}>
+
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold tracking-tight mb-1.5"
+                  style={{ fontFamily:'var(--font-bricolage),sans-serif', color:'var(--fg)' }}>
+                Create your account
+              </h1>
+              <p className="text-sm" style={{ color:'var(--fg-3)' }}>
+                Already a writer?{' '}
+                <Link href="/login" className="font-semibold underline underline-offset-2 hover:text-[var(--accent)]"
+                      style={{ color:'var(--fg-2)' }}>Sign in</Link>
+              </p>
+            </div>
+
+            {/* Google */}
+            <motion.button type="button" whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
+              className="flex items-center justify-center gap-2.5 h-11 w-full rounded-xl text-sm font-medium border mb-6 transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+              style={{ borderColor:'var(--border)', color:'var(--fg-2)', background:'var(--bg-card)' }}>
+              <GoogleIcon /> Continue with Google
+            </motion.button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex-1 h-px" style={{ background:'var(--border)' }} />
+              <span className="text-xs font-medium" style={{ color:'var(--fg-4)' }}>or with email</span>
+              <div className="flex-1 h-px" style={{ background:'var(--border)' }} />
+            </div>
+
+            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+              <Field id="name"  label="Full name" value={form.name}  onChange={set('name')}
+                error={errors.name} placeholder="Your name" autoComplete="name" />
+              <Field id="email" label="Email" type="email" value={form.email} onChange={set('email')}
+                error={errors.email} placeholder="your@email.com" autoComplete="email" />
+              <div className="flex flex-col gap-2">
+                <Field id="password" label="Password"
+                  type={showPw ? 'text' : 'password'}
+                  value={form.password} onChange={set('password')}
+                  error={errors.password} placeholder="••••••••" autoComplete="new-password"
+                  suffix={
+                    <button type="button" onClick={() => setShowPw(s=>!s)}
+                      className="flex items-center justify-center cursor-pointer hover:text-[var(--fg)]"
+                      style={{ color:'var(--fg-4)' }}>
+                      {showPw ? <EyeOff size={15} strokeWidth={2}/> : <Eye size={15} strokeWidth={2}/>}
+                    </button>
+                  } />
+                <AnimatePresence>
+                  {form.password && <PasswordStrength password={form.password} />}
+                </AnimatePresence>
+              </div>
+              <Field id="confirmPassword" label="Confirm password"
+                type="password" value={form.confirmPassword} onChange={set('confirmPassword')}
+                error={errors.confirmPassword} placeholder="••••••••" autoComplete="new-password" />
+
+              <MagneticBtn type="submit"
+                className="w-full h-11 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 cursor-pointer mt-1"
+                style={{ background:'var(--accent)' }}>
+                {loading ? (
+                  <motion.span animate={{ rotate:360 }} transition={{ duration:0.7, repeat:Infinity, ease:'linear' }}
+                    className="w-4 h-4 border-2 rounded-full"
+                    style={{ borderColor:'rgba(255,255,255,0.3)', borderTopColor:'#fff' }} />
+                ) : (
+                  <> Continue <ArrowRight size={15} strokeWidth={2.5} /> </>
+                )}
+              </MagneticBtn>
+            </form>
+
+            <p className="mt-5 text-xs text-center" style={{ color:'var(--fg-4)' }}>
+              By creating an account you agree to our{' '}
+              <Link href="/terms"   className="underline underline-offset-1">Terms</Link> and{' '}
+              <Link href="/privacy" className="underline underline-offset-1">Privacy Policy</Link>.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ── RIGHT — visual (always right on desktop) ── */}
       <div className="hidden lg:flex flex-1 flex-col relative overflow-hidden"
            style={{ background:'var(--bg-card)' }}>
-        <Blob className="w-[500px] h-[500px] -top-20 -left-20"
+        <Blob className="w-[500px] h-[500px] -top-20 -right-20"
               style={{ background:'var(--accent)', opacity:0.09 }} />
-        <Blob className="w-[380px] h-[380px] bottom-0 right-0"
+        <Blob className="w-[380px] h-[380px] bottom-0 left-0"
               style={{ background:'var(--accent)', opacity:0.06 }} />
 
         <div className="relative z-10 flex flex-col justify-center flex-1 px-16 py-16">
@@ -177,10 +224,9 @@ export default function RegisterPage() {
             <ul className="space-y-3.5">
               {BENEFITS.map((b, i) => (
                 <motion.li key={b}
-                  initial={{ opacity:0, x:-12 }} animate={{ opacity:1, x:0 }}
+                  initial={{ opacity:0, x:12 }} animate={{ opacity:1, x:0 }}
                   transition={{ delay:0.35+i*0.08, duration:0.35 }}
-                  className="flex items-center gap-3 text-sm"
-                  style={{ color:'var(--fg-2)' }}>
+                  className="flex items-center gap-3 text-sm" style={{ color:'var(--fg-2)' }}>
                   <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                        style={{ background:'var(--accent-dim)' }}>
                     <Check size={11} strokeWidth={2.5} style={{ color:'var(--accent)' }} />
@@ -191,7 +237,7 @@ export default function RegisterPage() {
             </ul>
           </motion.div>
 
-          {/* Mini post preview */}
+          {/* Mini post preview card */}
           <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }}
             transition={{ duration:0.6, delay:0.55, ease:[0.16,1,0.3,1] }}
             className="mt-12 p-6 rounded-2xl border max-w-xs"
@@ -204,228 +250,14 @@ export default function RegisterPage() {
                 <p className="text-[10px]" style={{ color:'var(--fg-4)' }}>Just published</p>
               </div>
             </div>
-            <p className="text-sm font-semibold mb-1" style={{ color:'var(--fg)' }}>
-              Why I stopped using ORMs
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color:'var(--fg-3)' }}>
-              Raw SQL isn't scary. It's liberating…
-            </p>
+            <p className="text-sm font-semibold mb-1" style={{ color:'var(--fg)' }}>Why I stopped using ORMs</p>
+            <p className="text-xs leading-relaxed" style={{ color:'var(--fg-3)' }}>Raw SQL isn't scary. It's liberating…</p>
             <div className="flex items-center gap-3 mt-3 text-xs" style={{ color:'var(--fg-4)' }}>
               <span>❤️ 702</span><span>💬 34</span><span>8 min read</span>
             </div>
           </motion.div>
         </div>
       </div>
-
-      {/* ── Right — form ── */}
-      <div className="flex flex-col flex-1 min-h-screen px-6 py-10 lg:max-w-[480px]">
-        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
-          className="flex items-center justify-between">
-          <div className="lg:hidden"><AppLogo size="md" /></div>
-          <div className="hidden lg:block" />
-          <StepDots current={done ? 2 : step} total={3} />
-        </motion.div>
-
-        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-10">
-          <AnimatePresence mode="wait">
-
-            {/* ── Success ── */}
-            {done && (
-              <motion.div key="done"
-                initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
-                className="flex flex-col items-center text-center py-8">
-                <motion.div initial={{ scale:0 }} animate={{ scale:1 }}
-                  transition={{ delay:0.1, type:'spring', stiffness:400, damping:18 }}
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
-                  style={{ background:'rgba(34,197,94,0.12)' }}>
-                  <Check size={28} style={{ color:'#22c55e' }} />
-                </motion.div>
-                <h2 className="text-2xl font-bold mb-2"
-                    style={{ fontFamily:'var(--font-bricolage), sans-serif', color:'var(--fg)' }}>
-                  You're in, {form.name.split(' ')[0]}!
-                </h2>
-                <p className="text-sm mb-6" style={{ color:'var(--fg-3)' }}>
-                  Your account is ready. Time to write something great.
-                </p>
-                <Link href="/explore"
-                  className="inline-flex items-center gap-2 h-11 px-7 rounded-xl text-sm font-semibold text-white"
-                  style={{ background:'var(--accent)' }}>
-                  Go to my feed <ArrowRight size={15} strokeWidth={2.5} />
-                </Link>
-              </motion.div>
-            )}
-
-            {/* ── Step 0 ── */}
-            {!done && step === 0 && (
-              <motion.div key="step0" initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }}
-                exit={{ opacity:0, x:-20 }} transition={{ duration:0.3, ease:[0.16,1,0.3,1] }}>
-                <div className="mb-8">
-                  <h1 className="text-3xl font-bold tracking-tight mb-1.5"
-                      style={{ fontFamily:'var(--font-bricolage), sans-serif', color:'var(--fg)' }}>
-                    Create your account
-                  </h1>
-                  <p className="text-sm" style={{ color:'var(--fg-3)' }}>
-                    Already a writer?{' '}
-                    <Link href="/login" className="font-semibold underline underline-offset-2 transition-colors hover:text-[var(--accent)]"
-                          style={{ color:'var(--fg-2)' }}>Sign in</Link>
-                  </p>
-                </div>
-
-                {/* Google */}
-                <motion.button type="button" whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-                  className="flex items-center justify-center gap-2.5 h-11 w-full rounded-xl text-sm font-medium border mb-6 transition-colors hover:bg-[var(--bg-hover)]"
-                  style={{ borderColor:'var(--border)', color:'var(--fg-2)', background:'var(--bg-card)' }}>
-                  <GoogleIcon /> Continue with Google
-                </motion.button>
-
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex-1 h-px" style={{ background:'var(--border)' }} />
-                  <span className="text-xs font-medium" style={{ color:'var(--fg-4)' }}>or with email</span>
-                  <div className="flex-1 h-px" style={{ background:'var(--border)' }} />
-                </div>
-
-                <form onSubmit={handleNext} noValidate className="flex flex-col gap-4">
-                  <Field id="name" label="Full name" value={form.name} onChange={set('name')}
-                    error={errors.name} placeholder="Your name" autoComplete="name" />
-                  <Field id="email" label="Email" type="email" value={form.email} onChange={set('email')}
-                    error={errors.email} placeholder="your@email.com" autoComplete="email" />
-                  <div className="flex flex-col gap-2">
-                    <Field id="password" label="Password"
-                      type={showPw ? 'text' : 'password'}
-                      value={form.password} onChange={set('password')}
-                      error={errors.password} placeholder="••••••••" autoComplete="new-password"
-                      suffix={
-                        <button type="button" onClick={() => setShowPw(s=>!s)}
-                          className="flex items-center justify-center hover:text-[var(--fg)]"
-                          style={{ color:'var(--fg-4)' }}>
-                          {showPw ? <EyeOff size={15} strokeWidth={2} /> : <Eye size={15} strokeWidth={2} />}
-                        </button>
-                      } />
-                    <AnimatePresence>
-                      {form.password && <PasswordStrength password={form.password} />}
-                    </AnimatePresence>
-                  </div>
-                  <Field id="confirmPassword" label="Confirm password"
-                    type="password" value={form.confirmPassword} onChange={set('confirmPassword')}
-                    error={errors.confirmPassword} placeholder="••••••••" autoComplete="new-password" />
-
-                  <MagneticBtn type="submit"
-                    className="w-full h-11 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 cursor-pointer mt-1"
-                    style={{ background:'var(--accent)' }}>
-                    Continue <ArrowRight size={15} strokeWidth={2.5} />
-                  </MagneticBtn>
-                </form>
-
-                <p className="mt-5 text-xs text-center" style={{ color:'var(--fg-4)' }}>
-                  By creating an account you agree to our{' '}
-                  <Link href="/terms"   className="underline underline-offset-1">Terms</Link> and{' '}
-                  <Link href="/privacy" className="underline underline-offset-1">Privacy Policy</Link>.
-                </p>
-              </motion.div>
-            )}
-
-            {/* ── Step 1 — interests (optional onboarding) ── */}
-            {!done && step === 1 && (
-              <motion.div key="step1" initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }}
-                exit={{ opacity:0, x:-20 }} transition={{ duration:0.3, ease:[0.16,1,0.3,1] }}>
-                <div className="mb-8">
-                  <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color:'var(--accent)' }}>
-                    Step 2 of 2
-                  </p>
-                  <h1 className="text-3xl font-bold tracking-tight mb-1.5"
-                      style={{ fontFamily:'var(--font-bricolage), sans-serif', color:'var(--fg)' }}>
-                    What do you love?
-                  </h1>
-                  <p className="text-sm" style={{ color:'var(--fg-3)' }}>
-                    Pick at least 2 topics to personalise your feed. You can change this later.
-                  </p>
-                </div>
-
-                <TopicPicker onDone={() => handleSubmit({ preventDefault: ()=>{} })} loading={loading} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Topic picker (step 2) ────────────────────────────────────────────────────
-const TOPICS = [
-  { id:'design',      label:'Design',       emoji:'🎨' },
-  { id:'engineering', label:'Engineering',  emoji:'⚙️' },
-  { id:'life',        label:'Life',         emoji:'🌱' },
-  { id:'business',    label:'Business',     emoji:'📈' },
-  { id:'science',     label:'Science',      emoji:'🔬' },
-  { id:'culture',     label:'Culture',      emoji:'🎭' },
-  { id:'productivity',label:'Productivity', emoji:'⚡' },
-  { id:'health',      label:'Health',       emoji:'💪' },
-  { id:'finance',     label:'Finance',      emoji:'💰' },
-  { id:'philosophy',  label:'Philosophy',   emoji:'🧠' },
-];
-
-function TopicPicker({ onDone, loading }) {
-  const [selected, setSelected] = useState(new Set());
-
-  const toggle = (id) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-2.5">
-        {TOPICS.map(({ id, label, emoji }, i) => {
-          const active = selected.has(id);
-          return (
-            <motion.button key={id} type="button"
-              initial={{ opacity:0, scale:0.9 }}
-              animate={{ opacity:1, scale:1 }}
-              transition={{ delay: i*0.04, duration:0.25 }}
-              onClick={() => toggle(id)}
-              whileHover={{ scale:1.03 }} whileTap={{ scale:0.96 }}
-              className="flex items-center gap-2.5 h-11 px-4 rounded-xl text-sm font-medium border text-left transition-all"
-              style={{
-                background:   active ? 'var(--accent-dim)' : 'var(--bg-card)',
-                borderColor:  active ? 'var(--accent)'     : 'var(--border)',
-                color:        active ? 'var(--accent)'     : 'var(--fg-2)',
-              }}>
-              <span>{emoji}</span>
-              <span className="truncate">{label}</span>
-              {active && (
-                <motion.span initial={{ scale:0 }} animate={{ scale:1 }}
-                  transition={{ type:'spring', stiffness:500, damping:20 }}
-                  className="ml-auto shrink-0">
-                  <Check size={13} strokeWidth={2.5} />
-                </motion.span>
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      <MagneticBtn type="button" onClick={onDone}
-        className="w-full h-11 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 cursor-pointer"
-        style={{
-          background: selected.size >= 2 ? 'var(--accent)' : 'var(--fg-4)',
-          cursor:     selected.size >= 2 ? 'pointer' : 'not-allowed',
-        }}>
-        {loading ? (
-          <motion.span animate={{ rotate:360 }} transition={{ duration:0.7, repeat:Infinity, ease:'linear' }}
-            className="w-4 h-4 border-2 rounded-full" style={{ borderColor:'rgba(255,255,255,0.3)', borderTopColor:'#fff' }} />
-        ) : (
-          <> {selected.size < 2 ? `Select ${2-selected.size} more` : 'Finish & explore'} <ArrowRight size={15} strokeWidth={2.5} /> </>
-        )}
-      </MagneticBtn>
-
-      <button type="button" onClick={onDone} className="text-xs text-center transition-colors hover:text-[var(--fg)]"
-              style={{ color:'var(--fg-4)' }}>
-        Skip for now
-      </button>
     </div>
   );
 }

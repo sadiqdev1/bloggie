@@ -59,7 +59,7 @@ function SocialBtn({ icon, label, onClick }) {
   return (
     <motion.button type="button" whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
       onClick={onClick}
-      className="flex items-center justify-center gap-2.5 h-11 w-full rounded-xl text-sm font-medium border transition-colors hover:bg-[var(--bg-hover)]"
+      className="flex items-center justify-center gap-2.5 h-11 w-full rounded-xl text-sm font-medium border cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
       style={{ borderColor:'var(--border)', color:'var(--fg-2)', background:'var(--bg-card)' }}>
       {icon}
       {label}

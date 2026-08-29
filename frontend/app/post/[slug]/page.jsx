@@ -10,6 +10,7 @@ import {
 import Link      from 'next/link';
 import NextImage from 'next/image';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import AuthMobileNav from '@/app/components/AuthMobileNav';
 import Footer    from '@/app/components/Footer';
 import Reveal    from '@/app/components/ui/Reveal';
 import { staggerSlow, fadeUp } from '@/app/lib/motion';
@@ -279,8 +280,10 @@ export default function PostPage({ params }) {
       <ReadingProgress />
       <AuthNavbar />
       <FloatingToolbar liked={liked} saved={saved} onLike={() => setLiked(l=>!l)} onSave={() => setSaved(s=>!s)} />
+      {/* Mobile bottom nav */}
+      <AuthMobileNav />
 
-      <main className="pt-16 min-h-screen" style={{ background:'var(--bg)' }}>
+      <main className="pt-14 pb-16 md:pb-0 min-h-screen" style={{ background:'var(--bg)' }}>
 
         {/* ── Hero cover ── */}
         <section className="relative overflow-hidden" style={{ height:'clamp(320px,50vh,540px)' }}>

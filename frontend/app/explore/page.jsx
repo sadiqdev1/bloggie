@@ -18,6 +18,7 @@ import NextImage from 'next/image';
 import Reveal      from '@/app/components/ui/Reveal';
 import MagneticBtn  from '@/app/components/ui/MagneticBtn';
 import AuthNavbar   from '@/app/components/AuthNavbar';
+import AuthMobileNav from '@/app/components/AuthMobileNav';
 import Footer       from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import { stagger, fadeUp, staggerSlow } from '@/app/lib/motion';
@@ -232,12 +233,13 @@ export default function ExplorePage() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background:'var(--bg)' }}>
+    <div className="min-h-screen pb-16 md:pb-0" style={{ background:'var(--bg)' }}>
       <ScrollProgress />
       <AuthNavbar />
+      <AuthMobileNav />
 
       {/* ── Top bar ── */}
-      <div className="sticky top-16 z-30 border-b"
+      <div className="sticky top-14 z-30 border-b"
            style={{ background:'var(--bg)', borderColor:'var(--border)', backdropFilter:'blur(24px)' }}>
         <div className="max-w-7xl mx-auto px-5">
           {/* Feed tabs */}
