@@ -87,7 +87,7 @@ function ExploreCard({ post, hovered, onHoverStart, onHoverEnd }) {
         <Bookmark size={13} strokeWidth={2.5} style={{ color:'#fff', fill: saved ? '#fff' : 'none' }} />
       </motion.button>
 
-      <Link href={`/post/${post.slug}`} className="contents">
+      <Link href={`/blog/${post.slug}`} className="contents">
         <div className="relative h-44 overflow-hidden">
           <NextImage src={post.cover} alt={post.title} fill
             sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,33vw"

@@ -609,7 +609,7 @@ export default function WritePage() {
                       style={{ borderColor: 'var(--border)', color: 'var(--fg-2)', background: 'var(--bg)' }}>
                       Back to feed
                     </NextLink>
-                    <NextLink href="/post/negative-space-ui"
+                    <NextLink href="/blog/negative-space-ui"
                       className="flex items-center gap-1.5 h-10 px-5 rounded-xl text-sm font-semibold text-white cursor-pointer"
                       style={{ background: 'var(--accent)' }}>
                       View post →

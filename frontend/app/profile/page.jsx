@@ -109,7 +109,7 @@ function PostRow({ post, isDraft = false }) {
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Link href={isDraft ? `/write?draft=${post.slug}` : `/post/${post.slug}`}>
+        <Link href={isDraft ? `/write?draft=${post.slug}` : `/blog/${post.slug}`}>
           <motion.span whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
             className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer transition-colors hover:bg-[var(--bg-card)]"
             style={{ color: 'var(--fg-3)' }}>

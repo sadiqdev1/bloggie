@@ -576,7 +576,7 @@ export default function PostPage({ params }) {
               className="grid sm:grid-cols-3 gap-5">
               {POST.related.map((rel) => (
                 <motion.div key={rel.slug} variants={fadeUp} whileHover={{ y:-5 }}>
-                  <Link href={`/post/${rel.slug}`}
+                  <Link href={`/blog/${rel.slug}`}
                     className="flex flex-col rounded-2xl border overflow-hidden h-full"
                     style={{ background:'var(--bg)', borderColor:'var(--border)' }}>
                     <div className="relative h-36 overflow-hidden">

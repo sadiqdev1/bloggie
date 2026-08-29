@@ -187,7 +187,7 @@ function HeroSlider() {
                 </div>
               </div>
 
-              <Link href={`/post/${slide.slug}`}>
+              <Link href={`/blog/${slide.slug}`}>
                 <motion.span
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                   className="inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold cursor-pointer"
@@ -252,7 +252,7 @@ function PostCard({ post, hovered, onHoverStart, onHoverEnd }) {
   return (
     <motion.div variants={fadeUp} whileHover={{ y: -6 }}
       onHoverStart={onHoverStart} onHoverEnd={onHoverEnd}>
-      <Link href={`/post/${post.slug}`}
+      <Link href={`/blog/${post.slug}`}
         className="flex flex-col rounded-2xl border overflow-hidden h-full group"
         style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
         <div className="relative h-44 overflow-hidden">

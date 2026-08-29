@@ -1,197 +1,231 @@
 'use client';
 
 /**
- * AuthSidebar — collapsible left sidebar for authenticated pages.
+ * AuthSidebar — shadcn/ui-inspired collapsible sidebar.
  *
- * Collapsed (default): 56px wide — icons only with tooltips
- * Expanded:           240px wide — icons + labels
- * Mobile: hidden entirely (AuthMobileNav handles mobile nav)
+ * Expanded (default on desktop): 220px — icon + label + section headers
+ * Collapsed:                      56px  — icon only + tooltip on hover
  *
- * Usage: wrap page content in a flex row:
- *   <div className="flex pt-16">
- *     <AuthSidebar />
- *     <main className="flex-1 min-w-0"> ... </main>
- *   </div>
+ * Design:
+ *  • Same bg as the page (var(--bg)) not card — blends in like shadcn
+ *  • Clean 1px right border
+ *  • Section labels (PLATFORM, LIBRARY, etc.) only visible when expanded
+ *  • Active item: subtle bg + accent-coloured text (not filled pill)
+ *  • Collapse toggle lives at the very bottom of the sidebar
+ *  • Write CTA moves from navbar to bottom of sidebar (prominent)
+ *  • Mobile: hidden (AuthMobileNav covers mobile)
  */
 
 import { useState } from 'react';
-import Link        from 'next/link';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Compass, PenSquare, Bookmark, Bell,
-  User, Settings, TrendingUp, Hash, ChevronRight,
-  Flame, Users,
+  User, Settings, TrendingUp, Hash,
+  ChevronLeft, ChevronRight, Flame,
+  LayoutDashboard, Rss,
 } from 'lucide-react';
 
-// ─── Nav items ─────────────────────────────────────────────────────────────────
-const NAV = [
-  { label: 'Feed',          href: '/explore',       icon: Home      },
-  { label: 'Discover',      href: '/blogs',         icon: Compass   },
-  { label: 'Trending',      href: '/blogs?sort=trending', icon: TrendingUp },
-  { label: 'Write',         href: '/write',         icon: PenSquare, accent: true },
-  { label: 'Bookmarks',     href: '/bookmarks',     icon: Bookmark  },
-  { label: 'Notifications', href: '/notifications', icon: Bell,     badge: 2 },
+// ─── Sidebar data ─────────────────────────────────────────────────────────────
+const SECTIONS = [
+  {
+    title: 'Platform',
+    items: [
+      { label: 'Feed',          href: '/explore',       icon: Home          },
+      { label: 'Discover',      href: '/blogs',         icon: Compass       },
+      { label: 'Trending',      href: '/blogs?tab=trending', icon: TrendingUp },
+      { label: 'Following',     href: '/explore?tab=following', icon: Rss   },
+    ],
+  },
+  {
+    title: 'Library',
+    items: [
+      { label: 'Bookmarks',     href: '/bookmarks',     icon: Bookmark      },
+      { label: 'Notifications', href: '/notifications', icon: Bell, badge: 2 },
+    ],
+  },
+  {
+    title: 'You',
+    items: [
+      { label: 'Profile',       href: '/profile',       icon: User          },
+      { label: 'Dashboard',     href: '/dashboard',     icon: LayoutDashboard },
+      { label: 'Settings',      href: '/settings',      icon: Settings      },
+    ],
+  },
 ];
 
-const BOTTOM_NAV = [
-  { label: 'Profile',   href: '/profile',   icon: User     },
-  { label: 'Settings',  href: '/settings',  icon: Settings },
-];
-
-const TRENDING_TOPICS = [
-  { label: 'Design Systems', count: '2.1k', icon: Hash },
-  { label: 'AI & Future',    count: '5.8k', icon: Flame },
-  { label: 'Productivity',   count: '1.4k', icon: Hash },
-  { label: 'Startups',       count: '3.2k', icon: Flame },
-];
-
-// ─── Tooltip wrapper ──────────────────────────────────────────────────────────
-function Tip({ label, children, show }) {
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+function Tooltip({ label, children, show }) {
+  if (!show) return <>{children}</>;
   return (
-    <div className="relative group/tip">
+    <div className="relative group/tt">
       {children}
-      {show && (
-        <div className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50">
-          <motion.div
-            initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }}
-            className="whitespace-nowrap text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl opacity-0 group-hover/tip:opacity-100 transition-opacity"
-            style={{ background: 'var(--fg)', color: 'var(--bg)' }}>
-            {label}
-          </motion.div>
+      <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 z-[100]
+                      opacity-0 group-hover/tt:opacity-100 transition-opacity duration-150">
+        <div className="whitespace-nowrap text-xs font-medium px-2 py-1 rounded-md shadow-md"
+             style={{ background: 'var(--fg)', color: 'var(--bg)' }}>
+          {label}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ─── Single nav item ──────────────────────────────────────────────────────────
-function NavItem({ item, expanded, pathname }) {
-  const active = pathname === item.href || (item.href !== '/explore' && item.href !== '/blogs' && pathname.startsWith(item.href));
+// ─── Nav item ─────────────────────────────────────────────────────────────────
+function Item({ item, collapsed, pathname }) {
+  const active = pathname === item.href
+    || (item.href.length > 1 && !item.href.includes('?') && pathname.startsWith(item.href));
 
   return (
-    <Tip label={item.label} show={!expanded}>
-      <Link href={item.href}
-        className="flex items-center gap-3 rounded-xl px-3 py-2.5 relative cursor-pointer transition-all group/item"
+    <Tooltip label={item.label} show={collapsed}>
+      <Link
+        href={item.href}
+        className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm outline-none cursor-pointer transition-colors"
         style={{
-          background:  active ? 'var(--accent-dim)'  : 'transparent',
-          color:       active ? 'var(--accent)'      : 'var(--fg-2)',
-        }}>
-
-        {/* Active indicator bar */}
-        {active && (
-          <motion.div layoutId="sidebar-indicator"
-            className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
-            style={{ background: 'var(--accent)' }}
-            transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
-        )}
-
-        {/* Icon */}
-        <div className="relative shrink-0 flex items-center justify-center w-5 h-5">
-          {item.accent ? (
-            <div className="w-7 h-7 rounded-xl flex items-center justify-center"
-                 style={{ background: active ? 'var(--accent)' : 'var(--accent-dim)' }}>
-              <item.icon size={14} strokeWidth={2.5}
-                style={{ color: active ? '#fff' : 'var(--accent)' }} />
-            </div>
-          ) : (
-            <item.icon size={17} strokeWidth={active ? 2.2 : 1.8}
-              style={{ color: active ? 'var(--accent)' : 'var(--fg-2)' }} />
-          )}
+          background: active ? 'var(--bg-hover)' : 'transparent',
+          color:      active ? 'var(--fg)'       : 'var(--fg-3)',
+          fontWeight: active ? 600 : 400,
+        }}
+      >
+        <div className="relative flex items-center justify-center shrink-0 w-4 h-4">
+          <item.icon
+            size={15}
+            strokeWidth={active ? 2.2 : 1.8}
+            style={{ color: active ? 'var(--accent)' : 'var(--fg-3)' }}
+          />
           {item.badge > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
-                  style={{ background: '#ef4444' }}>{item.badge}</span>
+            <span
+              className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
+              style={{ background: 'var(--accent)' }}>
+              {item.badge}
+            </span>
           )}
         </div>
 
-        {/* Label — only when expanded */}
-        <AnimatePresence>
-          {expanded && (
+        <AnimatePresence initial={false}>
+          {!collapsed && (
             <motion.span
+              key="label"
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: 'auto' }}
               exit={{   opacity: 0, width: 0 }}
-              transition={{ duration: 0.2 }}
-              className="text-sm font-medium whitespace-nowrap overflow-hidden"
-              style={{ color: active ? 'var(--accent)' : 'var(--fg-2)' }}>
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="truncate overflow-hidden whitespace-nowrap flex-1 min-w-0"
+            >
               {item.label}
             </motion.span>
           )}
         </AnimatePresence>
+
+        {/* Right-side badge when expanded */}
+        {!collapsed && item.badge > 0 && (
+          <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{ background: 'var(--accent)', color: '#fff' }}>
+            {item.badge}
+          </span>
+        )}
       </Link>
-    </Tip>
+    </Tooltip>
   );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function AuthSidebar() {
-  const [expanded, setExpanded] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
   return (
     <motion.aside
-      animate={{ width: expanded ? 240 : 56 }}
-      transition={{ duration: 0.28, ease: [0.16, 1, 0.3,1] }}
-      className="hidden md:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-64px)] border-r overflow-hidden"
+      animate={{ width: collapsed ? 56 : 220 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="hidden md:flex flex-col shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-hidden border-r"
       style={{
-        background:  'var(--bg-card)',
+        background:  'var(--bg)',
         borderColor: 'var(--border)',
       }}
     >
-      {/* Toggle button */}
-      <div className="flex items-center justify-end px-2 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-        <motion.button
-          onClick={() => setExpanded(e => !e)}
-          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
-          className="w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-          style={{ color: 'var(--fg-3)' }}
-          aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}>
-          <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.25 }}>
-            <ChevronRight size={15} strokeWidth={2.5} />
-          </motion.span>
-        </motion.button>
-      </div>
-
-      {/* Main nav */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 px-2 space-y-0.5"
+      <div className="flex flex-col h-full py-3 px-2 overflow-y-auto overflow-x-hidden"
            style={{ scrollbarWidth: 'none' }}>
-        {NAV.map(item => (
-          <NavItem key={item.href} item={item} expanded={expanded} pathname={pathname} />
-        ))}
 
-        {/* Trending topics — only shown when expanded */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ delay: 0.1 }}
-              className="pt-4 mt-2 border-t"
-              style={{ borderColor: 'var(--border)' }}>
-              <p className="text-[10px] font-bold tracking-widest uppercase px-3 mb-2"
-                 style={{ color: 'var(--fg-3)' }}>
-                Trending
-              </p>
-              {TRENDING_TOPICS.map(({ label, count, icon: Icon }) => (
-                <Link key={label} href={`/blogs?tag=${encodeURIComponent(label)}`}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                  style={{ color: 'var(--fg-2)' }}>
-                  <span className="flex items-center gap-2">
-                    <Icon size={11} strokeWidth={2} style={{ color: 'var(--fg-3)' }} />
-                    {label}
-                  </span>
-                  <span style={{ color: 'var(--fg-3)' }}>{count}</span>
-                </Link>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+        {/* Nav sections */}
+        <div className="flex-1 space-y-4">
+          {SECTIONS.map(({ title, items }) => (
+            <div key={title}>
+              {/* Section header — hidden when collapsed */}
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.p
+                    key="title"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="px-2 mb-1 text-[10px] font-semibold tracking-wider uppercase select-none"
+                    style={{ color: 'var(--fg-4)' }}
+                  >
+                    {title}
+                  </motion.p>
+                )}
+              </AnimatePresence>
 
-      {/* Bottom nav (profile + settings) */}
-      <div className="border-t px-2 py-2 space-y-0.5" style={{ borderColor: 'var(--border)' }}>
-        {BOTTOM_NAV.map(item => (
-          <NavItem key={item.href} item={item} expanded={expanded} pathname={pathname} />
-        ))}
+              <div className="space-y-0.5">
+                {items.map(item => (
+                  <Item key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Write CTA — lives in sidebar, not navbar */}
+        <div className="mt-4 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+          <Tooltip label="Write" show={collapsed}>
+            <Link href="/write"
+              className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm font-semibold cursor-pointer transition-colors"
+              style={{ background: 'var(--accent)', color: '#fff' }}>
+              <PenSquare size={15} strokeWidth={2} className="shrink-0" />
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.span
+                    key="write-label"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{   opacity: 0, width: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="truncate overflow-hidden whitespace-nowrap">
+                    Write a post
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+          </Tooltip>
+
+          {/* Collapse toggle */}
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="mt-1 flex items-center gap-2.5 w-full rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+            style={{ color: 'var(--fg-4)' }}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <span className="shrink-0 flex items-center justify-center w-4 h-4">
+              {collapsed
+                ? <ChevronRight size={14} strokeWidth={2} />
+                : <ChevronLeft  size={14} strokeWidth={2} />}
+            </span>
+            <AnimatePresence initial={false}>
+              {!collapsed && (
+                <motion.span
+                  key="collapse-label"
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{   opacity: 0, width: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="text-xs truncate overflow-hidden whitespace-nowrap">
+                  Collapse
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
       </div>
     </motion.aside>
   );

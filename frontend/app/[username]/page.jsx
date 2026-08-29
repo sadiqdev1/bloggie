@@ -68,7 +68,7 @@ function ProfilePostCard({ post }) {
     <motion.div variants={fadeUp} whileHover={{ y: -4 }}
       className="flex flex-col rounded-2xl border overflow-hidden"
       style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
-      <Link href={`/post/${post.slug}`} className="contents">
+      <Link href={`/blog/${post.slug}`} className="contents">
         <div className="relative h-44 overflow-hidden">
           <NextImage src={post.cover} alt={post.title} fill
             sizes="(max-width:640px)100vw,(max-width:1024px)50vw,33vw"

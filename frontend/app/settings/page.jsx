@@ -8,10 +8,12 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Lock, Bell, Palette, Save, Camera, AlertCircle,
-  Check, Eye, EyeOff, Trash2, LogOut, ChevronRight,
+  Check, Eye, EyeOff, Trash2, LogOut, ChevronRight, SlidersHorizontal,
 } from 'lucide-react';
 
 import AuthNavbar    from '@/app/components/AuthNavbar';
+import AuthSidebar   from '@/app/components/AuthSidebar';
+import AuthMobileNav from '@/app/components/AuthMobileNav';
 import Footer        from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 
@@ -81,10 +83,11 @@ function SaveToast({ show }) {
 }
 
 const TABS = [
-  { id:'profile',       label:'Profile',        icon: User    },
-  { id:'account',       label:'Account',        icon: Lock    },
-  { id:'notifications', label:'Notifications',   icon: Bell    },
-  { id:'appearance',    label:'Appearance',      icon: Palette },
+  { id:'profile',       label:'Profile',        icon: User               },
+  { id:'account',       label:'Account',        icon: Lock               },
+  { id:'notifications', label:'Notifications',  icon: Bell               },
+  { id:'appearance',    label:'Appearance',     icon: Palette            },
+  { id:'preferences',   label:'Preferences',    icon: SlidersHorizontal  },
 ];
 
 export default function SettingsPage() {
@@ -113,6 +116,23 @@ export default function SettingsPage() {
   const [accentColor, setAccentColor] = useState('#f97316');
   const ACCENT_PRESETS = ['#f97316','#8b5cf6','#3b82f6','#10b981','#ef4444','#f59e0b','#ec4899'];
 
+  // Preferences
+  const [theme, setTheme] = useState('system'); // 'light' | 'dark' | 'system'
+  const [fontSize, setFontSize] = useState('Default');
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [compactMode, setCompactMode] = useState(false);
+
+  const applyTheme = (t) => {
+    setTheme(t);
+    if (t === 'dark')  document.documentElement.classList.add('dark');
+    if (t === 'light') document.documentElement.classList.remove('dark');
+    if (t === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      prefersDark ? document.documentElement.classList.add('dark')
+                  : document.documentElement.classList.remove('dark');
+    }
+  };
+
   const save = async () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
@@ -122,10 +142,13 @@ export default function SettingsPage() {
     <>
       <ScrollProgress />
       <AuthNavbar />
+      <AuthMobileNav />
       <SaveToast show={saved} />
 
-      <main className="pt-16 min-h-screen" style={{ background:'var(--bg)' }}>
-        <div className="max-w-5xl mx-auto px-5 py-10">
+      <div className="flex pt-14 min-h-screen pb-16 md:pb-0" style={{ background:'var(--bg)' }}>
+        <AuthSidebar />
+        <main className="flex-1 min-w-0">
+        <div className="max-w-4xl mx-auto px-5 py-10">
 
           {/* Title */}
           <div className="mb-8">
@@ -289,6 +312,66 @@ export default function SettingsPage() {
                     </div>
                   )}
 
+                  {/* ── Preferences ── */}
+                  {tab === 'preferences' && (
+                    <div className="p-6 space-y-8">
+                      {/* Theme */}
+                      <div>
+                        <p className="text-sm font-semibold mb-1" style={{ color:'var(--fg)' }}>Theme</p>
+                        <p className="text-xs mb-4" style={{ color:'var(--fg-3)' }}>Choose how Bloggie looks for you.</p>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { id:'light',  label:'Light',  preview:'☀️' },
+                            { id:'dark',   label:'Dark',   preview:'🌙' },
+                            { id:'system', label:'System', preview:'💻' },
+                          ].map(({ id, label, preview }) => (
+                            <motion.button key={id}
+                              whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
+                              onClick={() => applyTheme(id)}
+                              className="flex flex-col items-center gap-2 p-4 rounded-xl border text-sm font-medium cursor-pointer transition-all"
+                              style={{
+                                background:  theme===id ? 'var(--accent-dim)' : 'var(--bg)',
+                                borderColor: theme===id ? 'var(--accent)'     : 'var(--border)',
+                                color:       theme===id ? 'var(--accent)'     : 'var(--fg-2)',
+                              }}>
+                              <span className="text-2xl">{preview}</span>
+                              {label}
+                              {theme===id && <Check size={12} strokeWidth={3} style={{ color:'var(--accent)' }} />}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Font size */}
+                      <div className="border-t pt-6" style={{ borderColor:'var(--border)' }}>
+                        <p className="text-sm font-semibold mb-1" style={{ color:'var(--fg)' }}>Reading font size</p>
+                        <p className="text-xs mb-4" style={{ color:'var(--fg-3)' }}>Affects post body text only.</p>
+                        <div className="flex items-center gap-2">
+                          {['Small','Default','Large','Extra large'].map(s => (
+                            <button key={s} onClick={() => setFontSize(s)}
+                              className="h-8 px-3 rounded-lg text-xs font-medium border cursor-pointer transition-all"
+                              style={{
+                                background:  fontSize===s ? 'var(--accent-dim)' : 'var(--bg)',
+                                color:       fontSize===s ? 'var(--accent)'     : 'var(--fg-3)',
+                                borderColor: fontSize===s ? 'var(--accent-glow)':'var(--border)',
+                              }}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Motion + density */}
+                      <div className="border-t pt-6 space-y-0" style={{ borderColor:'var(--border)' }}>
+                        <p className="text-sm font-semibold mb-4" style={{ color:'var(--fg)' }}>Accessibility & display</p>
+                        <Toggle checked={reducedMotion} onChange={setReducedMotion}
+                          label="Reduce motion" desc="Minimise animations and transitions" />
+                        <Toggle checked={compactMode} onChange={setCompactMode}
+                          label="Compact feed" desc="Show more posts with less whitespace" />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Save button */}
                   <div className="px-6 py-4 border-t flex justify-end"
                        style={{ borderColor:'var(--border)', background:'var(--bg)' }}>
@@ -304,7 +387,8 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
       <Footer />
     </>
   );

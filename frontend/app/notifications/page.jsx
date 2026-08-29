@@ -16,18 +16,18 @@ import { fadeUp, stagger } from '@/app/lib/motion';
 
 const ALL_NOTIS = [
   // Today
-  { id:1,  group:'Today',     type:'like',    read:false, actor:'Sofia Reyes',   actorInitials:'SR', actorColor:'#f97316', text:'liked your post',              subtext:'"The art of negative space in UI"',     time:'2 min ago',  href:'/post/negative-space-ui' },
+  { id:1,  group:'Today',     type:'like',    read:false, actor:'Sofia Reyes',   actorInitials:'SR', actorColor:'#f97316', text:'liked your post',              subtext:'"The art of negative space in UI"',     time:'2 min ago',  href:'/blog/negative-space-ui' },
   { id:2,  group:'Today',     type:'follow',  read:false, actor:'James Okafor',  actorInitials:'JO', actorColor:'#8b5cf6', text:'started following you',        subtext:'',                                       time:'18 min ago', href:'/jamesokafor' },
-  { id:3,  group:'Today',     type:'comment', read:false, actor:'Priya Nair',    actorInitials:'PN', actorColor:'#10b981', text:'commented on your post',       subtext:'"This is exactly what I needed…"',      time:'1h ago',     href:'/post/negative-space-ui' },
-  { id:4,  group:'Today',     type:'like',    read:true,  actor:'Marcus Tan',    actorInitials:'MT', actorColor:'#3b82f6', text:'liked your post',              subtext:'"Design tokens in 2026"',                time:'3h ago',     href:'/post/design-tokens-2026' },
+  { id:3,  group:'Today',     type:'comment', read:false, actor:'Priya Nair',    actorInitials:'PN', actorColor:'#10b981', text:'commented on your post',       subtext:'"This is exactly what I needed…"',      time:'1h ago',     href:'/blog/negative-space-ui' },
+  { id:4,  group:'Today',     type:'like',    read:true,  actor:'Marcus Tan',    actorInitials:'MT', actorColor:'#3b82f6', text:'liked your post',              subtext:'"Design tokens in 2026"',                time:'3h ago',     href:'/blog/design-tokens-2026' },
   // Yesterday
   { id:5,  group:'Yesterday', type:'follow',  read:true,  actor:'Lena Fischer',  actorInitials:'LF', actorColor:'#f59e0b', text:'started following you',        subtext:'',                                       time:'Yesterday',  href:'/lenafischer' },
-  { id:6,  group:'Yesterday', type:'comment', read:true,  actor:'Sofia Delgado', actorInitials:'SD', actorColor:'#8b5cf6', text:'replied to your comment',      subtext:'"Great point about micro-space…"',      time:'Yesterday',  href:'/post/negative-space-ui' },
-  { id:7,  group:'Yesterday', type:'save',    read:true,  actor:'James Okafor',  actorInitials:'JO', actorColor:'#8b5cf6', text:'saved your post',              subtext:'"Typography is 95% of design"',          time:'Yesterday',  href:'/post/typography-for-ui' },
+  { id:6,  group:'Yesterday', type:'comment', read:true,  actor:'Sofia Delgado', actorInitials:'SD', actorColor:'#8b5cf6', text:'replied to your comment',      subtext:'"Great point about micro-space…"',      time:'Yesterday',  href:'/blog/negative-space-ui' },
+  { id:7,  group:'Yesterday', type:'save',    read:true,  actor:'James Okafor',  actorInitials:'JO', actorColor:'#8b5cf6', text:'saved your post',              subtext:'"Typography is 95% of design"',          time:'Yesterday',  href:'/blog/typography-for-ui' },
   // This week
-  { id:8,  group:'This week', type:'like',    read:true,  actor:'Priya Nair',    actorInitials:'PN', actorColor:'#10b981', text:'and 42 others liked your post',subtext:'"Figma variables: six months later"',    time:'3 days ago', href:'/post/figma-variables' },
+  { id:8,  group:'This week', type:'like',    read:true,  actor:'Priya Nair',    actorInitials:'PN', actorColor:'#10b981', text:'and 42 others liked your post',subtext:'"Figma variables: six months later"',    time:'3 days ago', href:'/blog/figma-variables' },
   { id:9,  group:'This week', type:'follow',  read:true,  actor:'Marcus Tan',    actorInitials:'MT', actorColor:'#3b82f6', text:'and 7 others followed you',    subtext:'',                                       time:'4 days ago', href:'/explore' },
-  { id:10, group:'This week', type:'comment', read:true,  actor:'Amara Osei',    actorInitials:'AO', actorColor:'#ef4444', text:'commented on your post',       subtext:'"Micro-interactions that feel alive…"',  time:'5 days ago', href:'/post/micro-interactions' },
+  { id:10, group:'This week', type:'comment', read:true,  actor:'Amara Osei',    actorInitials:'AO', actorColor:'#ef4444', text:'commented on your post',       subtext:'"Micro-interactions that feel alive…"',  time:'5 days ago', href:'/blog/micro-interactions' },
 ];
 
 const ICON_MAP = {

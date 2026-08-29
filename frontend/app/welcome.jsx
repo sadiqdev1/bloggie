@@ -502,7 +502,7 @@ function PostsPreview() {
           {POSTS.map((post, i) => (
             <motion.div key={post.title} variants={fadeUp} whileHover={{ y:-8 }}
               onHoverStart={() => setHovered(i)} onHoverEnd={() => setHovered(null)}>
-              <Link href={`/post/${post.slug}`}
+              <Link href={`/blog/${post.slug}`}
                 className="flex flex-col rounded-2xl border overflow-hidden cursor-pointer h-full"
                 style={{ background:'var(--bg)', borderColor:'var(--border)' }}>
                 <div className="relative h-44 overflow-hidden">
