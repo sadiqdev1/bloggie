@@ -16,9 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import NextImage from 'next/image';
-import AuthNavbar    from '@/app/components/AuthNavbar';
-import AuthMobileNav from '@/app/components/AuthMobileNav';
-import AuthSidebar   from '@/app/components/AuthSidebar';
+import AuthLayout    from '@/app/components/AuthLayout';
 import Footer        from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import Reveal from '@/app/components/ui/Reveal';
@@ -142,13 +140,8 @@ export default function ProfilePage() {
   return (
     <>
       <ScrollProgress />
-      <AuthNavbar />
-      <AuthMobileNav />
-
-      <div className="flex pt-16 min-h-screen pb-16 md:pb-0" style={{ background: 'var(--bg)' }}>
-        <AuthSidebar />
-
-        <div className="flex-1 min-w-0 max-w-4xl mx-auto px-5 py-8">
+      <AuthLayout>
+      <div className="max-w-4xl mx-auto px-5 py-8">
 
           {/* ── Profile header card ── */}
           <Reveal>
@@ -345,8 +338,8 @@ export default function ProfilePage() {
               )}
             </motion.div>
           </AnimatePresence>
-        </div>
       </div>
+      </AuthLayout>
       <Footer />
     </>
   );

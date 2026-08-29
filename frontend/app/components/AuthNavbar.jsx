@@ -1,27 +1,23 @@
 'use client';
 
 /**
- * AuthNavbar — shadcn/ui-inspired top bar for authenticated pages.
+ * AuthNavbar (TopBar) — Taskora-style top bar adapted for Bloggie.
  *
- * Design language:
- *  • Thin 1px border-bottom only — no shadow/blur gimmicks by default
- *  • On scroll: subtle shadow lifts the bar off the page
- *  • Logo left, command-palette-style search centre, bell + avatar right
- *  • NO ThemeToggle (moved to Settings → Preferences)
- *  • NO Write button (lives in sidebar)
- *  • Height: h-14 (56px) — same as shadcn's default site header
- *  • All interactive elements use consistent h-8 sizing
- *  • Dropdown menus: clean border, tight padding, chevron-free
+ * Exact pattern from /c/xampp/htdocs/taskora/frontend/src/components/TopBar.jsx:
+ *  • height: 56px sticky, surface bg, 1px border-bottom
+ *  • Left: mobile menu trigger | collapse toggle (desktop) | page title
+ *  • Right: theme toggle | notifications bell (dot badge) | avatar dropdown
+ *  • Notifications: link to /notifications page (no inline dropdown overload)
+ *  • Avatar dropdown: settings + sign out (exact Taskora mouseEnter/Leave style)
+ *  • Command-palette search accessible via ⌘K (full-screen overlay)
  */
 
 import { useState, useEffect, useRef } from 'react';
 import Link        from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Bell, X, Settings, LogOut,
-  User, Bookmark, LayoutDashboard, Command,
-  CircleUserRound,
+  Menu, Bell, ChevronDown, PanelLeftClose, PanelLeftOpen,
+  Settings, LogOut, Sun, Moon, Search, X, Command,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
 
@@ -29,377 +25,286 @@ const MOCK_USER = {
   name:     'Sadiq Dev',
   username: 'sadiqdev1',
   initials: 'SD',
-  color:    'var(--accent)',
   email:    'sadiq@bloggie.io',
+  color:    'var(--accent)',
 };
 
-const NOTIS = [
-  { id:1, read:false, actor:'Sofia Reyes',  text:'liked your post',        time:'2m',   initials:'SR', color:'#f97316' },
-  { id:2, read:false, actor:'James Okafor', text:'started following you',  time:'18m',  initials:'JO', color:'#8b5cf6' },
-  { id:3, read:true,  actor:'Priya Nair',   text:'commented on your post', time:'1h',   initials:'PN', color:'#10b981' },
-  { id:4, read:true,  actor:'Marcus Tan',   text:'liked your post',        time:'3h',   initials:'MT', color:'#3b82f6' },
-];
-
-const MENU_ITEMS = [
-  { icon: CircleUserRound, label: 'Profile',     href: '/profile',   shortcut: '⇧P' },
-  { icon: LayoutDashboard, label: 'Dashboard',   href: '/dashboard', shortcut: null  },
-  { icon: Bookmark,        label: 'Bookmarks',   href: '/bookmarks', shortcut: null  },
-  { icon: Settings,        label: 'Settings',    href: '/settings',  shortcut: '⌘,' },
-];
-
-export default function AuthNavbar() {
-  const [scrolled,    setScrolled]    = useState(false);
-  const [searchOpen,  setSearchOpen]  = useState(false);
-  const [searchVal,   setSearchVal]   = useState('');
-  const [notiOpen,    setNotiOpen]    = useState(false);
-  const [menuOpen,    setMenuOpen]    = useState(false);
-  const [notis,       setNotis]       = useState(NOTIS);
-  const searchRef = useRef(null);
-  const notiRef   = useRef(null);
-  const menuRef   = useRef(null);
-  const pathname  = usePathname();
-  const unread    = notis.filter(n => !n.read).length;
+// ─── Theme hook (mirrors Taskora exactly) ─────────────────────────────────────
+function useTheme() {
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 0);
-    window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
+    const stored = localStorage.getItem('bloggie_theme') ?? 'light';
+    setTheme(stored);
+    if (stored === 'dark') document.documentElement.classList.add('dark');
+    else                   document.documentElement.classList.remove('dark');
   }, []);
 
-  useEffect(() => { setNotiOpen(false); setMenuOpen(false); }, [pathname]);
+  function toggle() {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    localStorage.setItem('bloggie_theme', next);
+    if (next === 'dark') document.documentElement.classList.add('dark');
+    else                 document.documentElement.classList.remove('dark');
+  }
 
+  return { theme, toggle };
+}
+
+// ─── Page title map ───────────────────────────────────────────────────────────
+const PAGE_TITLES = {
+  '/explore':       { title: 'Feed',          subtitle: 'Your personalised reading feed' },
+  '/blogs':         { title: 'Discover',       subtitle: 'Browse all public posts'       },
+  '/write':         { title: 'Write',          subtitle: 'Compose a new post'             },
+  '/bookmarks':     { title: 'Bookmarks',      subtitle: 'Your saved posts'               },
+  '/notifications': { title: 'Notifications',  subtitle: null                             },
+  '/profile':       { title: 'Profile',        subtitle: null                             },
+  '/dashboard':     { title: 'Dashboard',      subtitle: null                             },
+  '/settings':      { title: 'Settings',       subtitle: null                             },
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed }) {
+  const { theme, toggle: toggleTheme } = useTheme();
+  const pathname     = usePathname();
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchVal,  setSearchVal]  = useState('');
+  const searchRef    = useRef(null);
+  const unread       = 2; // mock — swap for real
+
+  const { title, subtitle } = PAGE_TITLES[pathname] ?? { title: 'Bloggie', subtitle: null };
+
+  useEffect(() => { setAvatarOpen(false); }, [pathname]);
+
+  // ⌘K to open search
   useEffect(() => {
     const h = e => {
-      if (notiRef.current && !notiRef.current.contains(e.target)) setNotiOpen(false);
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
-
-  // ⌘K shortcut opens search
-  useEffect(() => {
-    const h = e => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setSearchOpen(true);
-        setTimeout(() => searchRef.current?.focus(), 50);
-      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 40); }
       if (e.key === 'Escape') setSearchOpen(false);
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  const markAllRead = () => setNotis(ns => ns.map(n => ({ ...n, read: true })));
-
   return (
-    <header
-      className="fixed top-0 inset-x-0 z-50 h-14 flex items-center"
-      style={{
-        background:   'var(--bg-card)',
-        borderBottom: '1px solid var(--border)',
-        boxShadow:    scrolled ? '0 1px 8px rgba(0,0,0,0.06)' : 'none',
-        transition:   'box-shadow 0.2s',
-      }}
-    >
-      <div className="flex items-center w-full px-4 gap-3">
-
-        {/* ── Logo ── */}
-        <div className="shrink-0 flex items-center">
-          <AppLogo size="sm" />
-        </div>
-
-        {/* ── Separator ── */}
-        <div className="hidden md:block w-px h-5 shrink-0" style={{ background: 'var(--border-2)' }} />
-
-        {/* ── Search trigger — command palette style ── */}
-        <div className="hidden md:flex flex-1 max-w-sm">
+    <>
+      <header
+        className="flex items-center gap-3 px-4 sticky top-0 z-20 shrink-0"
+        style={{
+          height:       56,
+          background:   'var(--bg-card)',
+          borderBottom: '1px solid var(--border)',
+          backdropFilter: 'blur(16px)',
+        }}
+      >
+        {/* ── Left ── */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Mobile hamburger */}
           <button
-            onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 50); }}
-            className="flex items-center gap-2 w-full h-8 px-3 rounded-md border text-sm cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-            style={{ borderColor: 'var(--border)', background: 'var(--bg)', color: 'var(--fg-3)' }}
-          >
-            <Search size={13} strokeWidth={2} />
-            <span className="flex-1 text-left text-[13px]">Search…</span>
-            <span className="hidden lg:flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded border"
-                  style={{ borderColor: 'var(--border)', color: 'var(--fg-4)', background: 'var(--bg-card)' }}>
-              <Command size={9} strokeWidth={2} />K
-            </span>
+            onClick={onMenuClick}
+            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+            style={{ color: 'var(--fg-3)' }}
+            aria-label="Open menu">
+            <Menu size={18} strokeWidth={2} />
           </button>
-        </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+          {/* Desktop collapse toggle */}
+          <button
+            onClick={onToggleCollapse}
+            className="hidden lg:flex w-9 h-9 items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+            style={{ color: 'var(--fg-3)' }}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            {collapsed
+              ? <PanelLeftOpen  size={17} strokeWidth={1.8} />
+              : <PanelLeftClose size={17} strokeWidth={1.8} />
+            }
+          </button>
 
-        {/* ── Right: notifications + avatar ── */}
-        <div className="flex items-center gap-1.5">
-
-          {/* Bell */}
-          <div className="relative" ref={notiRef}>
-            <button
-              onClick={() => { setNotiOpen(o => !o); setMenuOpen(false); }}
-              aria-label="Notifications"
-              className="relative flex items-center justify-center w-8 h-8 rounded-md cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-              style={{ color: notiOpen ? 'var(--fg)' : 'var(--fg-3)' }}
-            >
-              <Bell size={16} strokeWidth={1.8} />
-              {unread > 0 && (
-                <span
-                  className="absolute top-1 right-1 w-2 h-2 rounded-full"
-                  style={{ background: 'var(--accent)' }}
-                />
-              )}
-            </button>
-
-            <AnimatePresence>
-              {notiOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0,  scale: 1    }}
-                  exit={{   opacity: 0, y: -4,  scale: 0.97 }}
-                  transition={{ duration: 0.12, ease: 'easeOut' }}
-                  className="absolute right-0 top-10 w-80 rounded-lg border shadow-lg overflow-hidden z-50"
-                  style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-3 py-2.5 border-b"
-                       style={{ borderColor: 'var(--border)' }}>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>
-                      Notifications
-                      {unread > 0 && (
-                        <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                              style={{ background: 'var(--accent)', color: '#fff' }}>
-                          {unread}
-                        </span>
-                      )}
-                    </p>
-                    {unread > 0 && (
-                      <button onClick={markAllRead}
-                        className="text-xs cursor-pointer transition-colors hover:text-[var(--fg)]"
-                        style={{ color: 'var(--fg-3)' }}>
-                        Mark all read
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Items */}
-                  <div className="max-h-64 overflow-y-auto divide-y" style={{ borderColor: 'var(--border)' }}>
-                    {notis.map(n => (
-                      <div key={n.id}
-                        onClick={() => setNotis(ns => ns.map(x => x.id === n.id ? { ...x, read: true } : x))}
-                        className="flex items-start gap-3 px-3 py-3 cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                        style={{ opacity: n.read ? 0.55 : 1 }}>
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5"
-                             style={{ background: n.color }}>{n.initials}</div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] leading-snug" style={{ color: 'var(--fg-2)' }}>
-                            <span className="font-semibold" style={{ color: 'var(--fg)' }}>{n.actor}</span>
-                            {' '}{n.text}
-                          </p>
-                          <p className="text-[11px] mt-0.5" style={{ color: 'var(--fg-3)' }}>{n.time} ago</p>
-                        </div>
-                        {!n.read && (
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5"
-                               style={{ background: 'var(--accent)' }} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="border-t" style={{ borderColor: 'var(--border)' }}>
-                    <Link href="/notifications" onClick={() => setNotiOpen(false)}
-                      className="flex items-center justify-center py-2.5 text-xs font-medium cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                      style={{ color: 'var(--fg-3)' }}>
-                      View all notifications
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Page title — desktop */}
+          <div className="hidden sm:block ml-1">
+            <h1 className="font-bold text-[0.95rem] leading-tight tracking-[-0.01em]"
+                style={{ color: 'var(--fg)' }}>
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-[0.72rem]" style={{ color: 'var(--fg-3)' }}>{subtitle}</p>
+            )}
           </div>
 
-          {/* Avatar menu */}
-          <div className="relative" ref={menuRef}>
+          {/* Logo on mobile when no title */}
+          <div className="sm:hidden">
+            <AppLogo size="sm" />
+          </div>
+        </div>
+
+        {/* ── Right ── */}
+        <div className="flex items-center ml-auto shrink-0 gap-1"
+             style={{ borderLeft: '1px solid var(--border)', paddingLeft: 10 }}>
+
+          {/* Search trigger */}
+          <button
+            onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 40); }}
+            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+            style={{ color: 'var(--fg-3)' }}
+            aria-label="Search (⌘K)"
+            title="Search (⌘K)">
+            <Search size={16} strokeWidth={1.8} />
+          </button>
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+            style={{ color: 'var(--fg-3)' }}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+            {theme === 'dark'
+              ? <Sun  size={16} strokeWidth={1.8} />
+              : <Moon size={16} strokeWidth={1.8} />
+            }
+          </button>
+
+          {/* Notifications */}
+          <Link
+            href="/notifications"
+            className="relative w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+            style={{ color: 'var(--fg-3)' }}
+            aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}>
+            <Bell size={17} strokeWidth={1.8} />
+            {unread > 0 && (
+              <span
+                className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-2"
+                style={{ background: 'var(--accent)', borderColor: 'var(--bg-card)' }}
+              />
+            )}
+          </Link>
+
+          {/* Avatar dropdown */}
+          <div className="relative">
             <button
-              onClick={() => { setMenuOpen(o => !o); setNotiOpen(false); }}
+              onClick={() => setAvatarOpen(o => !o)}
+              className="flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
               aria-label="Account menu"
-              className="flex items-center gap-2 h-8 pl-1 pr-2 rounded-md cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-              style={{ border: menuOpen ? '1px solid var(--border)' : '1px solid transparent' }}
-            >
-              {/* Avatar circle */}
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+              style={{ color: 'var(--fg)' }}>
+              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center text-white text-[0.65rem] font-black shrink-0"
                    style={{ background: MOCK_USER.color }}>
                 {MOCK_USER.initials}
               </div>
-              <span className="hidden sm:block text-[13px] font-medium max-w-[80px] truncate"
-                    style={{ color: 'var(--fg-2)' }}>
+              <span className="hidden sm:block text-[0.875rem] font-semibold max-w-[96px] truncate"
+                    style={{ color: 'var(--fg)' }}>
                 {MOCK_USER.name.split(' ')[0]}
               </span>
+              <ChevronDown size={12} strokeWidth={2.5}
+                className={`transition-transform duration-150 ${avatarOpen ? 'rotate-180' : ''}`}
+                style={{ color: 'var(--fg-3)' }} />
             </button>
 
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0,  scale: 1    }}
-                  exit={{   opacity: 0, y: -4,  scale: 0.97 }}
-                  transition={{ duration: 0.12, ease: 'easeOut' }}
-                  className="absolute right-0 top-10 w-56 rounded-lg border shadow-lg overflow-hidden z-50"
-                  style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
-                >
-                  {/* User header */}
-                  <div className="px-3 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                    <p className="text-[13px] font-semibold leading-none mb-1" style={{ color: 'var(--fg)' }}>
+            {avatarOpen && (
+              <>
+                {/* Backdrop */}
+                <div className="fixed inset-0 z-40" onClick={() => setAvatarOpen(false)} />
+                <div className="absolute right-0 top-full mt-1.5 z-50 rounded-xl overflow-hidden py-1 min-w-[180px]"
+                     style={{ background: 'var(--bg-card)', border: '1px solid var(--border)',
+                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+                  {/* User info */}
+                  <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+                    <p className="text-[0.875rem] font-semibold leading-none mb-1" style={{ color: 'var(--fg)' }}>
                       {MOCK_USER.name}
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>{MOCK_USER.email}</p>
+                    <p className="text-[0.72rem]" style={{ color: 'var(--fg-3)' }}>{MOCK_USER.email}</p>
                   </div>
 
-                  {/* Nav items */}
-                  <div className="py-1">
-                    {MENU_ITEMS.map(({ icon: Icon, label, href, shortcut }) => (
-                      <Link key={href} href={href} onClick={() => setMenuOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 text-[13px] cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                        style={{ color: 'var(--fg-2)' }}>
-                        <span className="flex items-center gap-2.5">
-                          <Icon size={14} strokeWidth={1.8} style={{ color: 'var(--fg-3)' }} />
-                          {label}
-                        </span>
-                        {shortcut && (
-                          <span className="text-[10px]" style={{ color: 'var(--fg-4)' }}>{shortcut}</span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
+                  <Link href="/settings" onClick={() => setAvatarOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-[0.875rem] font-medium transition-colors cursor-pointer"
+                    style={{ color: 'var(--fg-2)', textDecoration: 'none' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <Settings size={14} strokeWidth={1.8} style={{ color: 'var(--fg-4)', flexShrink: 0 }} />
+                    Settings
+                  </Link>
 
-                  {/* Divider + sign out */}
-                  <div className="border-t py-1" style={{ borderColor: 'var(--border)' }}>
-                    <button
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                      style={{ color: '#ef4444' }}>
-                      <LogOut size={14} strokeWidth={1.8} />
-                      Sign out
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <div style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
+
+                  <button
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[0.875rem] font-medium transition-colors cursor-pointer"
+                    style={{ color: 'var(--fg-3)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.color = '#ef4444'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fg-3)'; }}>
+                    <LogOut size={14} strokeWidth={1.8} className="shrink-0" />
+                    Sign out
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
+      </header>
 
-        {/* Mobile: search icon only */}
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="md:hidden flex items-center justify-center w-8 h-8 rounded-md cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-          style={{ color: 'var(--fg-3)' }}
-          aria-label="Search">
-          <Search size={16} strokeWidth={2} />
-        </button>
-      </div>
+      {/* ── Full-screen search overlay (⌘K) ── */}
+      {searchOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[60]"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setSearchOpen(false)}
+          />
+          <div
+            className="fixed top-[14vh] left-1/2 -translate-x-1/2 w-full max-w-lg z-[70] rounded-xl border overflow-hidden"
+            style={{ background: 'var(--bg-card)', borderColor: 'var(--border)',
+                     boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
+            {/* Input */}
+            <div className="flex items-center gap-3 px-4 border-b" style={{ height: 52, borderColor: 'var(--border)' }}>
+              <Search size={16} strokeWidth={2} style={{ color: 'var(--fg-3)', flexShrink: 0 }} />
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchVal}
+                onChange={e => setSearchVal(e.target.value)}
+                placeholder="Search posts, writers, topics…"
+                className="flex-1 bg-transparent text-[0.9rem] outline-none"
+                style={{ color: 'var(--fg)' }}
+              />
+              {searchVal
+                ? <button onClick={() => setSearchVal('')} style={{ color: 'var(--fg-4)' }} className="cursor-pointer hover:text-[var(--fg)] transition-colors"><X size={14} strokeWidth={2.5} /></button>
+                : <kbd className="text-[0.68rem] px-1.5 py-0.5 rounded border font-mono" style={{ borderColor: 'var(--border)', color: 'var(--fg-4)', background: 'var(--bg)' }}>ESC</kbd>
+              }
+            </div>
 
-      {/* ── Full-screen search overlay ── */}
-      <AnimatePresence>
-        {searchOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-[60]"
-              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-              onClick={() => setSearchOpen(false)}
-            />
-            {/* Command palette */}
-            <motion.div
-              initial={{ opacity: 0, y: -16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0,   scale: 1    }}
-              exit={{   opacity: 0, y: -16,  scale: 0.97 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed top-[15vh] left-1/2 -translate-x-1/2 w-full max-w-lg z-[70] rounded-xl border shadow-2xl overflow-hidden"
-              style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
-            >
-              {/* Input row */}
-              <div className="flex items-center gap-3 px-4 border-b"
-                   style={{ borderColor: 'var(--border)', height: '52px' }}>
-                <Search size={16} strokeWidth={2} style={{ color: 'var(--fg-3)', shrink: 0 }} />
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={searchVal}
-                  onChange={e => setSearchVal(e.target.value)}
-                  placeholder="Search posts, writers, topics…"
-                  className="flex-1 bg-transparent text-sm outline-none"
-                  style={{ color: 'var(--fg)' }}
-                />
-                {searchVal ? (
-                  <button onClick={() => setSearchVal('')}
-                    className="cursor-pointer transition-colors hover:text-[var(--fg)]"
-                    style={{ color: 'var(--fg-4)' }}>
-                    <X size={14} strokeWidth={2.5} />
-                  </button>
-                ) : (
-                  <kbd className="text-[11px] px-1.5 py-0.5 rounded border font-mono"
-                       style={{ borderColor: 'var(--border)', color: 'var(--fg-4)', background: 'var(--bg)' }}>
-                    ESC
-                  </kbd>
-                )}
-              </div>
+            {/* Results */}
+            <div className="px-2 py-2">
+              <p className="px-2 py-1.5 text-[0.66rem] font-bold uppercase tracking-widest" style={{ color: 'var(--fg-4)' }}>
+                {searchVal ? `Results for "${searchVal}"` : 'Quick links'}
+              </p>
+              {(searchVal
+                ? ['negative-space-ui', 'stop-using-orms', 'slow-mornings']
+                : [{ label: 'Your feed', href: '/explore' }, { label: 'Discover', href: '/blogs' }, { label: 'Write a post', href: '/write' }, { label: 'Bookmarks', href: '/bookmarks' }]
+              ).map((item, i) => {
+                const href  = typeof item === 'string' ? `/blog/${item}` : item.href;
+                const label = typeof item === 'string' ? item.replace(/-/g, ' ') : item.label;
+                return (
+                  <Link key={i} href={href} onClick={() => setSearchOpen(false)}
+                    className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[0.875rem] transition-colors cursor-pointer"
+                    style={{ color: 'var(--fg-2)', textDecoration: 'none' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <Search size={13} strokeWidth={1.8} style={{ color: 'var(--fg-4)', flexShrink: 0 }} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
 
-              {/* Empty state / results placeholder */}
-              {!searchVal && (
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold tracking-wider uppercase mb-2"
-                     style={{ color: 'var(--fg-4)' }}>
-                    Quick links
-                  </p>
-                  {[
-                    { label: 'Your feed',    href: '/explore'       },
-                    { label: 'Discover',     href: '/blogs'         },
-                    { label: 'Your profile', href: '/profile'       },
-                    { label: 'Write a post', href: '/write'         },
-                  ].map(({ label, href }) => (
-                    <Link key={href} href={href}
-                      onClick={() => setSearchOpen(false)}
-                      className="flex items-center gap-3 px-2 py-2 rounded-md text-sm cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                      style={{ color: 'var(--fg-2)' }}>
-                      <Search size={13} strokeWidth={2} style={{ color: 'var(--fg-4)' }} />
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {searchVal && (
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold tracking-wider uppercase mb-2"
-                     style={{ color: 'var(--fg-4)' }}>
-                    Results for "{searchVal}"
-                  </p>
-                  {['negative-space-ui', 'stop-using-orms', 'slow-mornings'].map(slug => (
-                    <Link key={slug} href={`/blog/${slug}`}
-                      onClick={() => setSearchOpen(false)}
-                      className="flex items-center gap-3 px-2 py-2 rounded-md text-sm cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
-                      style={{ color: 'var(--fg-2)' }}>
-                      <Search size={13} strokeWidth={2} style={{ color: 'var(--fg-4)' }} />
-                      {slug.replace(/-/g, ' ')}
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {/* Footer hint */}
-              <div className="flex items-center gap-3 px-4 py-2 border-t text-[11px]"
-                   style={{ borderColor: 'var(--border)', color: 'var(--fg-4)' }}>
-                <span><kbd className="font-mono">↑↓</kbd> navigate</span>
-                <span><kbd className="font-mono">↵</kbd> open</span>
-                <span><kbd className="font-mono">ESC</kbd> close</span>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </header>
+            {/* Footer */}
+            <div className="flex items-center gap-4 px-4 py-2 border-t text-[0.7rem]"
+                 style={{ borderColor: 'var(--border)', color: 'var(--fg-4)' }}>
+              <span><kbd className="font-mono">↑↓</kbd> navigate</span>
+              <span><kbd className="font-mono">↵</kbd> open</span>
+              <span><kbd className="font-mono">ESC</kbd> close</span>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

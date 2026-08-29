@@ -11,9 +11,7 @@ import {
   Check, Eye, EyeOff, Trash2, LogOut, ChevronRight, SlidersHorizontal,
 } from 'lucide-react';
 
-import AuthNavbar    from '@/app/components/AuthNavbar';
-import AuthSidebar   from '@/app/components/AuthSidebar';
-import AuthMobileNav from '@/app/components/AuthMobileNav';
+import AuthLayout    from '@/app/components/AuthLayout';
 import Footer        from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 
@@ -141,13 +139,8 @@ export default function SettingsPage() {
   return (
     <>
       <ScrollProgress />
-      <AuthNavbar />
-      <AuthMobileNav />
+      <AuthLayout>
       <SaveToast show={saved} />
-
-      <div className="flex pt-14 min-h-screen pb-16 md:pb-0" style={{ background:'var(--bg)' }}>
-        <AuthSidebar />
-        <main className="flex-1 min-w-0">
         <div className="max-w-4xl mx-auto px-5 py-10">
 
           {/* Title */}
@@ -387,8 +380,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
-        </main>
-      </div>
+      </AuthLayout>
       <Footer />
     </>
   );

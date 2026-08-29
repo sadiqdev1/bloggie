@@ -9,9 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Heart, UserPlus, MessageCircle, Bookmark, Check, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
-import AuthNavbar    from '@/app/components/AuthNavbar';
-import Footer        from '@/app/components/Footer';
-import ScrollProgress from '@/app/components/ui/ScrollProgress';
+import AuthLayout    from '@/app/components/AuthLayout';
 import { fadeUp, stagger } from '@/app/lib/motion';
 
 const ALL_NOTIS = [
@@ -126,11 +124,8 @@ export default function NotificationsPage() {
 
   return (
     <>
-      <ScrollProgress />
-      <AuthNavbar />
-
-      <main className="pt-16 min-h-screen" style={{ background:'var(--bg)' }}>
-        <div className="max-w-2xl mx-auto px-0 sm:px-5 py-8">
+      <AuthLayout>
+      <div className="max-w-2xl mx-auto px-0 sm:px-5 py-8">
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 sm:px-0 mb-6">
@@ -200,8 +195,7 @@ export default function NotificationsPage() {
             </AnimatePresence>
           </div>
         </div>
-      </main>
-      <Footer />
+      </AuthLayout>
     </>
   );
 }

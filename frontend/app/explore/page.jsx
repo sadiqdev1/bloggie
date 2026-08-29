@@ -17,9 +17,7 @@ import Link      from 'next/link';
 import NextImage from 'next/image';
 import Reveal      from '@/app/components/ui/Reveal';
 import MagneticBtn  from '@/app/components/ui/MagneticBtn';
-import AuthNavbar   from '@/app/components/AuthNavbar';
-import AuthMobileNav from '@/app/components/AuthMobileNav';
-import AuthSidebar   from '@/app/components/AuthSidebar';
+import AuthLayout    from '@/app/components/AuthLayout';
 import Footer       from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import { stagger, fadeUp, staggerSlow } from '@/app/lib/motion';
@@ -234,15 +232,12 @@ export default function ExplorePage() {
   );
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0" style={{ background:'var(--bg)' }}>
+    <div style={{ background:'var(--bg)' }}>
       <ScrollProgress />
-      <AuthNavbar />
-      <AuthMobileNav />
+      <AuthLayout>
 
       {/* ── Sidebar + main layout ── */}
-      <div className="flex pt-16">
-        <AuthSidebar />
-
+      <div className="flex">
         {/* ── All page content inside this flex child ── */}
         <div className="flex-1 min-w-0">
 
@@ -363,7 +358,8 @@ export default function ExplorePage() {
       </div>
       <Footer />
         </div>{/* end flex-1 main content */}
-      </div>{/* end flex pt-16 sidebar+content */}
+      </div>{/* end flex sidebar+content */}
+      </AuthLayout>
     </div>
   );
 }
