@@ -16,8 +16,8 @@
  *  • Integrates with CSS variable design system (no hard-coded colours)
  */
 
-import { useState, useRef, useCallback } from 'react';
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit         from '@tiptap/starter-kit';
 import Placeholder        from '@tiptap/extension-placeholder';
 import CharacterCount     from '@tiptap/extension-character-count';
@@ -102,6 +102,8 @@ export default function WritePage() {
   const [loading,      setLoading]     = useState(false);
   const [linkUrl,      setLinkUrl]     = useState('');
   const [linkOpen,     setLinkOpen]    = useState(false);
+  // Custom bubble menu position — {top, left} in px, or null when hidden
+  const [bubblePos,    setBubblePos]   = useState(null);
 
   // ── Tiptap editor ────────────────────────────────────────────────────────
   const editor = useEditor({
@@ -134,6 +136,47 @@ export default function WritePage() {
 
   const wordCount = editor ? editor.storage.characterCount?.words() ?? 0 : 0;
   const readTime  = calcReadTime(wordCount);
+
+  // ── Track selection → position bubble menu ───────────────────────────────
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateBubble = () => {
+      const { state } = editor;
+      const { from, to, empty } = state.selection;
+      if (empty) { setBubblePos(null); return; }
+
+      // Get the DOM rect of the selection
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) { setBubblePos(null); return; }
+        const range = sel.getRangeAt(0);
+        const rect  = range.getBoundingClientRect();
+        if (!rect.width) { setBubblePos(null); return; }
+
+        // Position bubble centred above selection, clamped inside viewport
+        const bubbleW  = 248; // approximate width of the bubble
+        const scrollY  = window.scrollY;
+        let   left     = rect.left + rect.width / 2 - bubbleW / 2;
+        left           = Math.max(8, Math.min(left, window.innerWidth - bubbleW - 8));
+
+        setBubblePos({
+          top:  rect.top + scrollY - 48, // 48px above selection
+          left,
+        });
+      } catch {
+        setBubblePos(null);
+      }
+    };
+
+    editor.on('selectionUpdate', updateBubble);
+    editor.on('blur', () => setBubblePos(null));
+
+    return () => {
+      editor.off('selectionUpdate', updateBubble);
+      editor.off('blur', () => setBubblePos(null));
+    };
+  }, [editor]);
 
   // ── Toolbar actions ──────────────────────────────────────────────────────
   const setLink = useCallback(() => {
@@ -384,25 +427,37 @@ export default function WritePage() {
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
-          {/* Tiptap bubble menu (appears on selection) */}
-          {editor && (
-            <BubbleMenu editor={editor} tippyOptions={{ duration: 120 }}>
-              <div
-                className="flex items-center gap-0.5 px-1.5 py-1 rounded-xl border shadow-2xl"
-                style={{ background: 'var(--bg-dropdown)', borderColor: 'var(--border)' }}
+          {/* Custom bubble menu — fixed position, driven by selection */}
+          <AnimatePresence>
+            {bubblePos && editor && !editor.state.selection.empty && (
+              <motion.div
+                key="bubble"
+                initial={{ opacity: 0, y: 6, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1    }}
+                exit={{   opacity: 0, y: 6, scale: 0.94  }}
+                transition={{ duration: 0.14 }}
+                className="fixed z-[200] flex items-center gap-0.5 px-1.5 py-1.5 rounded-xl border shadow-2xl"
+                style={{
+                  top:         bubblePos.top,
+                  left:        bubblePos.left,
+                  background:  'var(--bg-dropdown)',
+                  borderColor: 'var(--border)',
+                }}
+                // Prevent mousedown from blurring the editor
+                onMouseDown={e => e.preventDefault()}
               >
                 {[
-                  { icon: Bold,          label: 'Bold',   fn: () => editor.chain().focus().toggleBold().run(),    active: editor.isActive('bold')    },
-                  { icon: Italic,        label: 'Italic', fn: () => editor.chain().focus().toggleItalic().run(),  active: editor.isActive('italic')  },
-                  { icon: UnderlineIcon, label: 'U',      fn: () => editor.chain().focus().toggleUnderline().run(),active: editor.isActive('underline')},
-                  { icon: Highlighter,   label: 'Mark',   fn: () => editor.chain().focus().toggleHighlight().run(),active: editor.isActive('highlight')},
-                  { icon: Link2,         label: 'Link',   fn: () => setLinkOpen(o=>!o),                           active: editor.isActive('link')    },
+                  { icon: Bold,          label: 'Bold',      fn: () => editor.chain().focus().toggleBold().run(),      active: editor.isActive('bold')       },
+                  { icon: Italic,        label: 'Italic',    fn: () => editor.chain().focus().toggleItalic().run(),    active: editor.isActive('italic')     },
+                  { icon: UnderlineIcon, label: 'Underline', fn: () => editor.chain().focus().toggleUnderline().run(), active: editor.isActive('underline')  },
+                  { icon: Highlighter,   label: 'Highlight', fn: () => editor.chain().focus().toggleHighlight().run(), active: editor.isActive('highlight')  },
+                  { icon: Link2,         label: 'Link',      fn: () => setLinkOpen(o => !o),                          active: editor.isActive('link')       },
                 ].map(({ icon, label, fn, active }) => (
                   <TB key={label} icon={icon} label={label} onClick={fn} active={active} size={13} />
                 ))}
-              </div>
-            </BubbleMenu>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Editor content */}
           <EditorContent editor={editor} />
