@@ -70,7 +70,7 @@ export default function AuthMobileNav() {
                   transition={{ type:'spring', stiffness:500, damping:30 }}
                   className="flex items-center justify-center w-7 h-7">
                   <Icon size={20} strokeWidth={active ? 2.2 : 1.8}
-                    style={{ color: active ? 'var(--accent)' : 'var(--fg-4)' }} />
+                    style={{ color: active ? 'var(--accent)' : 'var(--fg-2)' }} />
                 </motion.span>
                 {/* Badge */}
                 {badge && badge > 0 && (
@@ -88,8 +88,8 @@ export default function AuthMobileNav() {
             {/* Label */}
             {!accent && (
               <motion.span
-                animate={{ color: active ? 'var(--accent)' : 'var(--fg-4)' }}
-                className="text-[10px] font-medium leading-none">
+                animate={{ color: active ? 'var(--accent)' : 'var(--fg-2)' }}
+                className="text-[10px] font-semibold leading-none">
                 {label}
               </motion.span>
             )}

@@ -164,8 +164,8 @@ export default function OnboardingPage() {
                   }
                 </motion.button>
                 <button onClick={() => setStep(1)}
-                  className="mt-3 w-full text-center text-xs cursor-pointer transition-colors hover:text-[var(--fg)]"
-                  style={{ color:'var(--fg-4)' }}>
+                  className="mt-3 w-full text-center text-xs font-medium cursor-pointer transition-colors hover:text-[var(--fg)]"
+                  style={{ color:'var(--fg-3)' }}>
                   Skip for now
                 </button>
               </motion.div>

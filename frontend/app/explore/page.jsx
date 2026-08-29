@@ -19,6 +19,7 @@ import Reveal      from '@/app/components/ui/Reveal';
 import MagneticBtn  from '@/app/components/ui/MagneticBtn';
 import AuthNavbar   from '@/app/components/AuthNavbar';
 import AuthMobileNav from '@/app/components/AuthMobileNav';
+import AuthSidebar   from '@/app/components/AuthSidebar';
 import Footer       from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import { stagger, fadeUp, staggerSlow } from '@/app/lib/motion';
@@ -238,6 +239,13 @@ export default function ExplorePage() {
       <AuthNavbar />
       <AuthMobileNav />
 
+      {/* ── Sidebar + main layout ── */}
+      <div className="flex pt-16">
+        <AuthSidebar />
+
+        {/* ── All page content inside this flex child ── */}
+        <div className="flex-1 min-w-0">
+
       {/* ── Top bar ── */}
       <div className="sticky top-14 z-30 border-b"
            style={{ background:'var(--bg)', borderColor:'var(--border)', backdropFilter:'blur(24px)' }}>
@@ -354,6 +362,8 @@ export default function ExplorePage() {
         <Sidebar />
       </div>
       <Footer />
+        </div>{/* end flex-1 main content */}
+      </div>{/* end flex pt-16 sidebar+content */}
     </div>
   );
 }

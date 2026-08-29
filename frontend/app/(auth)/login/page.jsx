@@ -108,7 +108,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
       {/* ── Left panel — form ── */}
-      <div className="flex flex-col flex-1 min-h-screen items-center px-6 py-10 lg:max-w-[480px]">
+      <div className="flex flex-col w-full mx-auto min-h-screen items-center px-6 py-10 lg:w-[480px] lg:mx-0 lg:shrink-0">
         {/* Logo */}
         <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
           transition={{ duration:0.4 }} className="w-full max-w-sm">
@@ -160,7 +160,7 @@ export default function LoginPage() {
                 {/* Divider */}
                 <div className="flex items-center gap-3 mb-6">
                   <div className="flex-1 h-px" style={{ background:'var(--border)' }} />
-                  <span className="text-xs font-medium" style={{ color:'var(--fg-4)' }}>or continue with email</span>
+                <span className="text-xs font-medium" style={{ color:'var(--fg-3)' }}>or continue with email</span>
                   <div className="flex-1 h-px" style={{ background:'var(--border)' }} />
                 </div>
 
