@@ -124,12 +124,13 @@ export default function RegisterPage() {
     <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
 
       {/* ── LEFT — form (always left on desktop) ── */}
-      <div className="flex flex-col flex-1 min-h-screen px-6 py-10 lg:max-w-[480px]">
-        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}>
+      <div className="flex flex-col flex-1 min-h-screen items-center px-6 py-10 lg:max-w-[480px]">
+        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+          transition={{ duration:0.4 }} className="w-full max-w-sm">
           <AppLogo size="md" />
         </motion.div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-10">
+        <div className="flex-1 flex flex-col justify-center w-full max-w-sm py-10">
           <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
             transition={{ duration:0.45, ease:[0.16,1,0.3,1] }}>
 

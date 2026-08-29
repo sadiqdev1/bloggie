@@ -112,14 +112,14 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
       {/* ── Left — form ── */}
-      <div className="flex flex-col flex-1 min-h-screen px-6 py-10 lg:max-w-[520px]">
+      <div className="flex flex-col flex-1 min-h-screen items-center px-6 py-10 lg:max-w-[520px]">
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 w-full max-w-sm">
           <AppLogo size="md" />
           <StepBar step={step} total={3} />
         </div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-10">
+        <div className="flex-1 flex flex-col justify-center w-full max-w-sm py-10">
           <AnimatePresence mode="wait">
 
             {/* ── Step 0: Topics ── */}

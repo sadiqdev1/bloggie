@@ -108,13 +108,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
       {/* ── Left panel — form ── */}
-      <div className="flex flex-col flex-1 min-h-screen px-6 py-10 lg:max-w-[480px]">
+      <div className="flex flex-col flex-1 min-h-screen items-center px-6 py-10 lg:max-w-[480px]">
         {/* Logo */}
-        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}>
+        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+          transition={{ duration:0.4 }} className="w-full max-w-sm">
           <AppLogo size="md" />
         </motion.div>
 
-        <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full py-10">
+        <div className="flex-1 flex flex-col justify-center w-full max-w-sm py-10">
           <AnimatePresence mode="wait">
             {done ? (
               <motion.div key="done"
