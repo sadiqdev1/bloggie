@@ -148,11 +148,16 @@ export default function Footer() {
                   {section}
                 </p>
                 <ul className="space-y-3">
-                  {links.map(link => (
-                    <FooterLink key={link} href={`/${link.toLowerCase()}`}>
-                      {link}
-                    </FooterLink>
-                  ))}
+                  {links.map(link => {
+                    // Map link labels to correct hrefs
+                    const HREF_MAP = { Write: '/register', Blogs: '/blogs', Explore: '/explore' };
+                    const href = HREF_MAP[link] ?? `/${link.toLowerCase()}`;
+                    return (
+                      <FooterLink key={link} href={href}>
+                        {link}
+                      </FooterLink>
+                    );
+                  })}
                 </ul>
               </div>
             ))}

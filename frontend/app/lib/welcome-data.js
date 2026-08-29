@@ -94,9 +94,9 @@ export const HOW_STEPS = [
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 export const FOOTER_LINKS = {
-  Product: ['Explore', 'Pricing', 'Changelog', 'Roadmap'],
-  Company: ['About', 'Blog', 'Careers', 'Contact'],
-  Legal:   ['Privacy', 'Terms', 'Cookies'],
+  Platform: ['Explore', 'Blogs', 'Write'],
+  Company:  ['About',   'Contact', 'Help'],
+  Legal:    ['Privacy', 'Terms'],
 };
 
 export const SOCIAL_LINKS = [
