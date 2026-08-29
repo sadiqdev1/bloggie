@@ -2,241 +2,203 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  BookOpen, Settings, CreditCard, Shield, Zap, MessageCircle,
-  ChevronDown, ArrowRight, Search,
-} from 'lucide-react';
-import Link      from 'next/link';
-import PageShell from '@/app/components/PageShell';
-import Reveal    from '@/app/components/ui/Reveal';
-import Blob      from '@/app/components/ui/Blob';
-import { staggerSlow, fadeUp } from '@/app/lib/motion';
+import { Search, ChevronDown, Book, PenLine, User, Settings, MessageCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import Navbar from '@/app/components/Navbar';
+import Footer from '@/app/components/Footer';
+import Reveal from '@/app/components/ui/Reveal';
+import ScrollProgress from '@/app/components/ui/ScrollProgress';
+import { stagger, fadeUp } from '@/app/lib/motion';
 
-// ─── Data ──────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  {
-    icon: BookOpen,
-    title: 'Getting started',
-    desc:  'Set up your account and publish your first post in minutes.',
-    articles: ['Creating your account', 'Writing & formatting your first post', 'Adding a cover image', 'Publishing and sharing', 'Setting up your profile'],
-  },
-  {
-    icon: Settings,
-    title: 'Account & settings',
-    desc:  'Manage your profile, notifications, and security.',
-    articles: ['Changing your email or password', 'Two-factor authentication', 'Notification preferences', 'Exporting your data', 'Deleting your account'],
-  },
-  {
-    icon: CreditCard,
-    title: 'Billing & plans',
-    desc:  'Understand your plan, upgrade, or cancel at any time.',
-    articles: ['What is the free plan?', 'Upgrading to Pro', 'Cancelling your subscription', 'Refund policy', 'Accepted payment methods'],
-  },
-  {
-    icon: Zap,
-    title: 'The editor',
-    desc:  'Tips and tricks to get the most out of our writing tools.',
-    articles: ['Keyboard shortcuts', 'Embedding images & media', 'Code blocks and syntax highlighting', 'Saving drafts', 'Markdown support'],
-  },
-  {
-    icon: Shield,
-    title: 'Privacy & safety',
-    desc:  'Control who sees your content and how your data is used.',
-    articles: ['Making a post private', 'Blocking a user', 'Reporting content', 'How we store your data', 'Cookie settings'],
-  },
-  {
-    icon: MessageCircle,
-    title: 'Community',
-    desc:  'Grow your audience and engage with other writers.',
-    articles: ['Following other writers', 'Comments and reactions', 'Getting discovered', 'Writer badges', 'Community guidelines'],
-  },
+  { icon: PenLine,        color:'#f97316', label:'Writing & publishing', count:12 },
+  { icon: User,           color:'#8b5cf6', label:'Account & profile',   count:8  },
+  { icon: Book,           color:'#3b82f6', label:'Reading & exploring', count:6  },
+  { icon: Settings,       color:'#10b981', label:'Settings & privacy',  count:9  },
+  { icon: MessageCircle,  color:'#f59e0b', label:'Comments & community',count:5  },
 ];
 
 const FAQS = [
   {
-    q: 'Is Bloggie really free?',
-    a: 'Yes. The core experience — writing, publishing, and building an audience — is completely free, forever. We offer an optional Pro plan with advanced analytics and custom domains.',
+    q: 'How do I publish my first post?',
+    a: 'Click "Write" in the navigation bar to open the editor. Write your title and body, add tags, and click "Publish". Your post will be live instantly.',
   },
   {
-    q: 'Who owns my content?',
-    a: 'You do, 100%. We never claim ownership of your writing. You can export or delete everything at any time from your account settings.',
+    q: 'Can I edit or delete a post after publishing?',
+    a: 'Yes. Open the post, click the three-dot menu (⋯) in the toolbar, and select "Edit" or "Delete". Edits are reflected immediately.',
+  },
+  {
+    q: 'How does the feed algorithm work?',
+    a: 'Your "For You" tab shows posts based on topics you follow, writers you follow, and your reading history. You can reset your preferences in Settings → Interests.',
+  },
+  {
+    q: 'How do I change my username?',
+    a: 'Go to Settings → Profile and update the Username field. Usernames must be unique and contain only letters, numbers, and underscores.',
+  },
+  {
+    q: 'Is Bloggie free?',
+    a: 'Yes. Reading and writing are always free. We plan to offer an optional supporter plan in the future, but the core product will remain free forever.',
+  },
+  {
+    q: 'How do I export my data?',
+    a: 'Go to Settings → Account → Export data. You will receive a JSON file containing all your posts, comments, and account information within a few minutes.',
+  },
+  {
+    q: 'How do I report a post or account?',
+    a: 'Click the three-dot menu (⋯) on any post or profile and select "Report". Select a reason and submit. Our moderation team reviews all reports within 24 hours.',
   },
   {
     q: 'Can I use a custom domain?',
-    a: 'Custom domains are available on the Pro plan. You can point any domain you own to your Bloggie profile in a few steps.',
-  },
-  {
-    q: 'Does Bloggie use an algorithm to decide what gets seen?',
-    a: 'No. We don\'t suppress or amplify posts based on engagement signals. What you publish goes straight to your followers and is discoverable through search and tags.',
-  },
-  {
-    q: 'How do I delete my account?',
-    a: 'Go to Settings → Account → Delete account. Your content is removed immediately and your personal data is purged within 30 days.',
-  },
-  {
-    q: 'Can I import posts from Medium or Substack?',
-    a: 'Yes. We support importing from Medium (via their export feature) and from any RSS feed. The importer is in Settings → Import.',
+    a: 'Custom domains are on our roadmap and will be available in a future update. Follow our blog for announcements.',
   },
 ];
 
-// ─── FAQ accordion item ─────────────────────────────────────────────────────
-function FaqItem({ q, a, i }) {
+function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
-    <Reveal delay={i * 0.05}>
-      <motion.div
-        className="border-b last:border-0"
-        style={{ borderColor: 'var(--border)' }}
-      >
-        <button
-          className="w-full flex items-center justify-between gap-4 py-5 text-left"
-          onClick={() => setOpen(o => !o)}
-        >
-          <span className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>{q}</span>
-          <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.22 }} className="shrink-0">
-            <ChevronDown size={16} strokeWidth={2} style={{ color: 'var(--fg-3)' }} />
-          </motion.span>
-        </button>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{   height: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden"
-            >
-              <p className="text-sm leading-relaxed pb-5" style={{ color: 'var(--fg-2)' }}>{a}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </Reveal>
-  );
-}
-
-// ─── Category card ─────────────────────────────────────────────────────────
-function CategoryCard({ icon: Icon, title, desc, articles }) {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <motion.div variants={fadeUp} whileHover={{ y: -4 }}
-      className="flex flex-col p-7 rounded-2xl border"
-      style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
-           style={{ background: 'var(--accent-dim)' }}>
-        <Icon size={20} strokeWidth={2} style={{ color: 'var(--accent)' }} />
-      </div>
-      <h3 className="text-base font-semibold mb-1.5" style={{ color: 'var(--fg)' }}>{title}</h3>
-      <p className="text-sm leading-relaxed mb-5 flex-1" style={{ color: 'var(--fg-3)' }}>{desc}</p>
-      <ul className="space-y-2 mb-4">
-        {articles.slice(0, expanded ? articles.length : 3).map(a => (
-          <li key={a}>
-            <a href="#" className="text-xs flex items-center gap-1.5 group transition-colors hover:text-[var(--accent)]"
-               style={{ color: 'var(--fg-3)' }}>
-              <ArrowRight size={10} strokeWidth={2.5} className="shrink-0 group-hover:translate-x-0.5 transition-transform" />
-              {a}
-            </a>
-          </li>
-        ))}
-      </ul>
-      {articles.length > 3 && (
-        <button onClick={() => setExpanded(o => !o)}
-          className="text-xs font-semibold transition-colors hover:text-[var(--accent)]"
-          style={{ color: 'var(--fg-4)' }}>
-          {expanded ? 'Show less' : `+${articles.length - 3} more`}
-        </button>
-      )}
+    <motion.div layout
+      className="border-b last:border-0 overflow-hidden"
+      style={{ borderColor:'var(--border)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left gap-4 transition-colors hover:bg-[var(--bg-hover)]">
+        <span className="text-sm font-semibold" style={{ color:'var(--fg)' }}>{q}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration:0.2 }} className="shrink-0">
+          <ChevronDown size={16} strokeWidth={2} style={{ color:'var(--fg-4)' }} />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }}
+            exit={{   height:0, opacity:0 }} transition={{ duration:0.25, ease:[0.16,1,0.3,1] }}>
+            <p className="px-5 pb-4 text-sm leading-relaxed" style={{ color:'var(--fg-3)' }}>{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────
 export default function HelpPage() {
   const [query, setQuery] = useState('');
 
+  const filtered = FAQS.filter(f =>
+    !query.trim() ||
+    f.q.toLowerCase().includes(query.toLowerCase()) ||
+    f.a.toLowerCase().includes(query.toLowerCase())
+  );
+
   return (
-    <PageShell>
-      {/* ── Hero + search ── */}
-      <section className="relative overflow-hidden pt-20 pb-20 px-5 border-b" style={{ borderColor: 'var(--border)' }}>
-        <Blob className="w-[440px] h-[440px] -top-24 left-1/2 -translate-x-1/2"
-              style={{ background: 'var(--accent)', opacity: 0.08 }} />
-        <div className="max-w-2xl mx-auto text-center relative z-10">
+    <>
+      <ScrollProgress />
+      <Navbar />
+      <main className="pt-16 min-h-screen" style={{ background:'var(--bg)' }}>
+
+        {/* Hero */}
+        <section className="py-20 px-5 text-center border-b" style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
           <Reveal>
-            <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--accent)' }}>Help centre</p>
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6"
-                style={{ fontFamily: 'var(--font-bricolage), sans-serif', color: 'var(--fg)' }}>
+            <h1 className="text-4xl font-bold tracking-tight mb-3"
+                style={{ fontFamily:'var(--font-bricolage),sans-serif', color:'var(--fg)' }}>
               How can we help?
             </h1>
-            {/* Search bar */}
-            <div className="relative">
-              <Search size={16} strokeWidth={2} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                      style={{ color: 'var(--fg-3)' }} />
-              <input
-                type="text" value={query} onChange={e => setQuery(e.target.value)}
-                placeholder="Search articles…"
-                className="w-full h-12 pl-10 pr-4 rounded-2xl text-sm border"
-                style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--fg)', outline: 'none' }}
-              />
-            </div>
-            <p className="mt-4 text-sm" style={{ color: 'var(--fg-3)' }}>
-              Or browse the categories below.
+            <p className="text-base mb-8" style={{ color:'var(--fg-3)' }}>
+              Search our help articles or browse by category.
             </p>
+            <div className="relative max-w-lg mx-auto">
+              <Search size={16} strokeWidth={2}
+                className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color:'var(--fg-4)' }} />
+              <input type="text" value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search help articles…"
+                className="w-full h-12 pl-11 pr-5 rounded-2xl text-sm border outline-none transition-all"
+                style={{
+                  background:  'var(--bg)',
+                  color:       'var(--fg)',
+                  borderColor: query ? 'var(--accent)' : 'var(--border)',
+                  boxShadow:   query ? '0 0 0 3px var(--accent-dim)' : '0 4px 24px rgba(0,0,0,0.06)',
+                }} />
+            </div>
           </Reveal>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Categories ── */}
-      <section className="py-20 px-5">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="mb-12">
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--fg)' }}>Browse by topic</h2>
-          </Reveal>
-          <motion.div initial="hidden" whileInView="visible"
-            viewport={{ once: true, margin: '-60px' }} variants={staggerSlow}
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {CATEGORIES.map(c => <CategoryCard key={c.title} {...c} />)}
-          </motion.div>
-        </div>
-      </section>
+        {/* Categories */}
+        {!query && (
+          <section className="px-5 py-16 border-b" style={{ borderColor:'var(--border)' }}>
+            <div className="max-w-4xl mx-auto">
+              <Reveal className="mb-8">
+                <h2 className="text-xl font-bold" style={{ color:'var(--fg)' }}>Browse by category</h2>
+              </Reveal>
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={stagger}
+                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {CATEGORIES.map(({ icon: Icon, color, label, count }) => (
+                  <motion.div key={label} variants={fadeUp} whileHover={{ y:-3 }}
+                    className="flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+                    style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                         style={{ background:`${color}18` }}>
+                      <Icon size={16} strokeWidth={1.8} style={{ color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color:'var(--fg)' }}>{label}</p>
+                      <p className="text-xs" style={{ color:'var(--fg-4)' }}>{count} articles</p>
+                    </div>
+                    <ArrowRight size={14} strokeWidth={2} style={{ color:'var(--fg-4)' }} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </section>
+        )}
 
-      {/* ── FAQs ── */}
-      <section className="py-20 px-5 border-t" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-        <div className="max-w-3xl mx-auto">
-          <Reveal className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight"
-                style={{ fontFamily: 'var(--font-bricolage), sans-serif', color: 'var(--fg)' }}>
-              Frequently asked questions
-            </h2>
-          </Reveal>
-          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
-            <div className="divide-y px-6" style={{ '--tw-divide-opacity': 1, borderColor: 'var(--border)' }}>
-              {FAQS.map((f, i) => <FaqItem key={f.q} {...f} i={i} />)}
+        {/* FAQs */}
+        <section className="px-5 py-16">
+          <div className="max-w-2xl mx-auto">
+            <Reveal className="mb-6">
+              <h2 className="text-xl font-bold" style={{ color:'var(--fg)' }}>
+                {query ? `Results for "${query}"` : 'Frequently asked questions'}
+              </h2>
+            </Reveal>
+            <div className="rounded-2xl border overflow-hidden" style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
+              <AnimatePresence>
+                {filtered.length > 0
+                  ? filtered.map(f => <FAQItem key={f.q} {...f} />)
+                  : (
+                    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
+                      className="py-16 text-center">
+                      <p className="text-3xl mb-3">🔍</p>
+                      <p className="font-semibold mb-1" style={{ color:'var(--fg)' }}>No results found</p>
+                      <p className="text-sm" style={{ color:'var(--fg-3)' }}>Try different keywords or contact us directly.</p>
+                    </motion.div>
+                  )
+                }
+              </AnimatePresence>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Still need help ── */}
-      <section className="py-20 px-5">
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <div className="flex flex-col md:flex-row md:items-center gap-6 p-8 rounded-2xl border"
-                 style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--fg)' }}>Still can't find what you need?</h3>
-                <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
-                  Our support team reads every message and replies within one business day.
-                </p>
+        {/* Still stuck CTA */}
+        <section className="px-5 pb-20">
+          <Reveal className="max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-7 rounded-2xl border"
+                 style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
+              <div>
+                <p className="font-semibold mb-1" style={{ color:'var(--fg)' }}>Still need help?</p>
+                <p className="text-sm" style={{ color:'var(--fg-3)' }}>Our team replies to every message, usually within a few hours.</p>
               </div>
-              <Link href="/contact"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold text-white shrink-0 transition-opacity hover:opacity-90"
-                style={{ background: 'var(--accent)' }}>
-                Contact support <ArrowRight size={14} strokeWidth={2.5} />
+              <Link href="/contact">
+                <motion.span whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
+                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white cursor-pointer shrink-0"
+                  style={{ background:'var(--accent)' }}>
+                  Contact us <ArrowRight size={14} strokeWidth={2.5} />
+                </motion.span>
               </Link>
             </div>
           </Reveal>
-        </div>
-      </section>
-    </PageShell>
+        </section>
+      </main>
+      <Footer />
+    </>
   );
 }

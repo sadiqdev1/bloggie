@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import Link      from 'next/link';
 import NextImage from 'next/image';
-import Navbar    from '@/app/components/Navbar';
+import AuthNavbar from '@/app/components/AuthNavbar';
 import Footer    from '@/app/components/Footer';
 import Reveal    from '@/app/components/ui/Reveal';
 import { staggerSlow, fadeUp } from '@/app/lib/motion';
@@ -269,21 +269,22 @@ export default function PostPage({ params }) {
   const [shareOpen,  setShareOpen]  = useState(false);
   const contentRef = useRef(null);
 
-  /* Parallax cover */
+  /* Parallax cover — spring-smoothed for physical feel */
   const { scrollY } = useScroll();
-  const coverY = useTransform(scrollY, [0, 500], ['0%', '18%']);
+  const rawCoverY = useTransform(scrollY, [0, 600], [0, 110]);
+  const coverY    = useSpring(rawCoverY, { stiffness: 60, damping: 20, mass: 0.8 });
 
   return (
     <>
       <ReadingProgress />
-      <Navbar />
+      <AuthNavbar />
       <FloatingToolbar liked={liked} saved={saved} onLike={() => setLiked(l=>!l)} onSave={() => setSaved(s=>!s)} />
 
       <main className="pt-16 min-h-screen" style={{ background:'var(--bg)' }}>
 
         {/* ── Hero cover ── */}
         <section className="relative overflow-hidden" style={{ height:'clamp(320px,50vh,540px)' }}>
-          <motion.div className="absolute inset-0" style={{ y: coverY }}>
+          <motion.div className="absolute inset-0 will-change-transform" style={{ y: coverY }}>
             <NextImage src={POST.cover} alt={POST.title} fill priority
               sizes="100vw" className="object-cover"
               placeholder="blur" blurDataURL={POST.blur} />

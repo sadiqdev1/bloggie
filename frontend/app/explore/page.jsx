@@ -15,8 +15,11 @@ import {
 } from 'lucide-react';
 import Link      from 'next/link';
 import NextImage from 'next/image';
-import Reveal    from '@/app/components/ui/Reveal';
-import MagneticBtn from '@/app/components/ui/MagneticBtn';
+import Reveal      from '@/app/components/ui/Reveal';
+import MagneticBtn  from '@/app/components/ui/MagneticBtn';
+import AuthNavbar   from '@/app/components/AuthNavbar';
+import Footer       from '@/app/components/Footer';
+import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import { stagger, fadeUp, staggerSlow } from '@/app/lib/motion';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -230,8 +233,8 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-screen" style={{ background:'var(--bg)' }}>
-      {/* Import Navbar inline since we're not using PageShell (auth-specific layout) */}
-      {/* In production this would check auth and redirect */}
+      <ScrollProgress />
+      <AuthNavbar />
 
       {/* ── Top bar ── */}
       <div className="sticky top-16 z-30 border-b"
@@ -348,6 +351,7 @@ export default function ExplorePage() {
         {/* ── Sidebar ── */}
         <Sidebar />
       </div>
+      <Footer />
     </div>
   );
 }
