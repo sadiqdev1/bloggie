@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Bloggie Design Tokens
+   All theming is done via CSS custom properties so every component using
+   var(--*) automatically gets both dark and light modes.
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Light theme (default) */
+:root {
+  color-scheme: light;
+
+  --bg:           #f2f3f5;
+  --bg-card:      #ffffff;
+  --bg-hover:     rgba(0,0,0,0.04);
+  --bg-input:     rgba(255,255,255,0.9);
+  --bg-overlay:   rgba(0,0,0,0.55);
+  --bg-modal:     #ffffff;
+  --bg-dropdown:  #ffffff;
+
+  --fg:           #0a0a0a;
+  --fg-2:         rgba(10,10,10,0.65);
+  --fg-3:         rgba(10,10,10,0.42);
+  --fg-4:         rgba(10,10,10,0.25);
+
+  --border:       rgba(0, 0, 0, 0.09);
+  --border-2:     rgba(0,0,0,0.16);
+  --border-input: rgba(0,0,0,0.12);
+
+  --accent:       #dc2626;
+  --accent-h:     #ef4444;
+  --accent-dim:   rgba(220,38,38,0.10);
+  --accent-glow:  rgba(220,38,38,0.20);
+}
+
+
+/* Dark theme (default) */
+:root.dark {
+  color-scheme: dark;
+
+  --bg:           #000000;
+  --bg-card:      #0d0d0d;
+  --bg-hover:     rgba(255,255,255,0.05);
+  --bg-input:     rgba(0,0,0,0.6);
+  --bg-overlay:   rgba(0,0,0,0.85);
+  --bg-modal:     #0d0d0d;
+  --bg-dropdown:  #161616;
+
+  --fg:           #ffffff;
+  --fg-2:         rgba(255,255,255,0.70);
+  --fg-3:         rgba(255,255,255,0.45);
+  --fg-4:         rgba(255,255,255,0.25);
+
+  --border:       rgba(255,255,255,0.08);
+  --border-2:     rgba(255,255,255,0.15);
+  --border-input: rgba(255,255,255,0.10);
+
+  --accent:       #ef4444;
+  --accent-h:     #f87171;
+  --accent-dim:   rgba(239,68,68,0.12);
+  --accent-glow:  rgba(239,68,68,0.25);
+}
+
+
+/* ── Tailwind theme registration ──────────────────────────────────────────── */
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --font-sans:    var(--font-inter),    system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains), 'Courier New', monospace;
+  --font-display: var(--font-bricolage), var(--font-inter), sans-serif;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: rgba(128,128,128,0.2) transparent;
+  scrollbar-width: thin;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.15s ease;
+}
+
+::selection { background-color: var(--accent); color: #fff; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(128,128,128,0.2);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.35); }
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  min-width: 280px;
+  max-width: 400px;
+  animation: toast-in 0.26s cubic-bezier(0.16,1,0.3,1);
+}
+.toast.exiting { animation: toast-out 0.26s cubic-bezier(0.16,1,0.3,1) forwards; }
+.toast-success { border-color: rgba(0,135,90,0.2); }
+.toast-error   { border-color: rgba(192,57,43,0.2); }
+.toast-info    { border-color: rgba(108,92,231,0.2); }
+@keyframes toast-in  { from { opacity:0; transform: translateY(12px) scale(0.96); } to { opacity:1; transform: none; } }
+@keyframes toast-out { from { opacity:1; transform: none; } to { opacity:0; transform: translateY(8px) scale(0.96); } }
+
+/* ── Scrollbar hide utility — fix #4 (no Tailwind plugin needed) ──────────── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ── Navbar glass — theme-aware frosted surface ───────────────────────────── */
+.navbar-glass {
+  background: rgba(242, 243, 245, 0.85);
+}
+:root.dark .navbar-glass {
+  /* Darker + more opaque in dark mode so content behind doesn't bleed through */
+  background: rgba(5, 5, 5, 0.92);
+}
+
+/* ── Theme-aware utility classes used across components ───────────────────── */
+
+/* Page background */
+.db-bg        { background-color: var(--bg); }
+/* Card surface */
+.db-card      { background-color: var(--bg-card); border-color: var(--border); }
+/* Input */
+.db-input     { background-color: var(--bg-input); border-color: var(--border-input); color: var(--fg); }
+/* Dropdown / popover */
+.db-dropdown  { background-color: var(--bg-dropdown); border-color: var(--border); }
+/* Overlay backdrop */
+.db-overlay   { background-color: var(--bg-overlay); }
+/* Modal card */
+.db-modal     { background-color: var(--bg-modal); border-color: var(--border); }
+/* Primary text */
+.db-text      { color: var(--fg); }
+.db-text-2    { color: var(--fg-2); }
+.db-text-3    { color: var(--fg-3); }
+.db-text-4    { color: var(--fg-4); }
+/* Border */
+.db-border    { border-color: var(--border); }
+.db-border-2  { border-color: var(--border-2); }
+/* Surface cells (replaces bg-white/[0.03]) */
+.db-surface   { background-color: rgba(128,128,128,0.04); }
+.db-surface-2 { background-color: rgba(128,128,128,0.07); }
+/* Hover surface */
+.db-hover:hover { background-color: var(--bg-hover); }
+/* Accent */
+.db-accent    { color: var(--accent); }
