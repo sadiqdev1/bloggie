@@ -52,7 +52,7 @@ function isActive(href, pathname) {
   return pathname.startsWith(href);
 }
 
-// ─── Single nav link ──────────────────────────────────────────────────────────
+// ─── Single nav link — Medium style: left border active, no bg fill ──────────
 function NavLink({ item, collapsed, pathname, onClick }) {
   const active = isActive(item.href, pathname);
   const Icon   = item.icon;
@@ -61,60 +61,45 @@ function NavLink({ item, collapsed, pathname, onClick }) {
     <Link
       href={item.href}
       onClick={onClick}
-      className="sidebar-link group relative flex items-center rounded-lg transition-colors duration-150 outline-none focus-visible:ring-2"
+      className="sidebar-link group relative flex items-center rounded-r-lg transition-colors duration-150 outline-none"
       style={{
-        padding:         collapsed ? '10px 0' : '9px 12px',
-        justifyContent:  collapsed ? 'center' : 'flex-start',
-        gap:             collapsed ? 0 : 10,
-        background:      'transparent',
-        textDecoration:  'none',
+        padding:        collapsed ? '9px 0' : '8px 12px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        gap:            collapsed ? 0 : 10,
+        background:     'transparent',
+        textDecoration: 'none',
+        borderLeft:     active ? '2px solid var(--fg)' : '2px solid transparent',
+        marginLeft:     -3,
       }}
     >
-      {/* Animated active pill */}
-      {active && (
-        <motion.span
-          layoutId="sidebar-active-pill"
-          className="absolute inset-0 rounded-lg"
-          style={{ background: 'var(--accent-dim)', borderLeft: '2px solid var(--accent)' }}
-          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-        />
-      )}
-
       {/* Icon */}
       <div className="relative shrink-0 flex items-center justify-center" style={{ width: 18, height: 18 }}>
         <Icon
           size={17}
           strokeWidth={active ? 2.2 : 1.8}
-          className="relative transition-transform duration-150 group-hover:scale-110"
-          style={{ color: active ? 'var(--accent)' : 'var(--fg-3)' }}
+          style={{ color: active ? 'var(--fg)' : 'var(--fg-3)' }}
         />
-        {/* Dot badge when collapsed */}
         {collapsed && item.badge > 0 && (
-          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full ring-2"
-                style={{ background: 'var(--accent)', ringColor: 'var(--bg-card)' }} />
+          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
+                style={{ background: 'var(--accent)' }} />
         )}
       </div>
 
-      {/* Tooltip (collapsed only) */}
+      {/* Tooltip when collapsed */}
       {collapsed && (
         <span
-          className="sidebar-tooltip pointer-events-none absolute left-full z-[200]
+          className="pointer-events-none absolute left-full z-[200]
                      px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap opacity-0
                      group-hover:opacity-100 transition-opacity duration-150"
           style={{
-            top:        '50%',
-            transform:  'translateY(-50%)',
-            marginLeft: 10,
-            background: 'var(--fg)',
-            color:      'var(--bg)',
-            boxShadow:  '0 4px 16px rgba(0,0,0,0.18)',
-          }}
-        >
-          {/* Arrow */}
+            top: '50%', transform: 'translateY(-50%)', marginLeft: 10,
+            background: 'var(--fg)', color: 'var(--bg)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+          }}>
           <span className="absolute top-1/2 -translate-y-1/2"
-                style={{ right:'100%', width:0, height:0,
-                  borderTop:'5px solid transparent', borderBottom:'5px solid transparent',
-                  borderRight:`5px solid var(--fg)` }} />
+                style={{ right: '100%', width: 0, height: 0,
+                  borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
+                  borderRight: `5px solid var(--fg)` }} />
           {item.label}{item.badge ? ` (${item.badge})` : ''}
         </span>
       )}
@@ -122,14 +107,14 @@ function NavLink({ item, collapsed, pathname, onClick }) {
       {/* Label */}
       {!collapsed && (
         <span className="relative flex-1 truncate text-[0.875rem]"
-              style={{ color: active ? 'var(--accent)' : 'var(--fg-2)', fontWeight: active ? 600 : 400 }}>
+              style={{ color: active ? 'var(--fg)' : 'var(--fg-3)', fontWeight: active ? 600 : 400 }}>
           {item.label}
         </span>
       )}
 
-      {/* Expanded badge */}
+      {/* Badge */}
       {!collapsed && item.badge > 0 && (
-        <span className="relative text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center text-white leading-none"
+        <span className="text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center text-white leading-none"
               style={{ background: 'var(--accent)' }}>
           {item.badge}
         </span>
