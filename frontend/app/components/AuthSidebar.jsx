@@ -20,22 +20,20 @@ import {
   Home, BookOpen, PenSquare, Bookmark, Bell,
   User, Settings, LayoutDashboard,
   ChevronsUpDown, LogOut, X,
+  BookMarked, BarChart2,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
 
-// ─── Nav items ────────────────────────────────────────────────────────────────
-const NAV_MAIN = [
-  { label: 'Feed',      href: '/explore',   icon: Home    },
-  { label: 'Blogs',     href: '/blogs',     icon: BookOpen },
-];
-const NAV_LIBRARY = [
-  { label: 'Bookmarks',     href: '/bookmarks',     icon: Bookmark            },
-  { label: 'Notifications', href: '/notifications', icon: Bell, badge: 2      },
-];
-const NAV_YOU = [
-  { label: 'Profile',       href: '/profile',       icon: User                },
-  { label: 'Dashboard',     href: '/dashboard',     icon: LayoutDashboard     },
-  { label: 'Settings',      href: '/settings',      icon: Settings            },
+// ─── Flat nav list ────────────────────────────────────────────────────────────
+const NAV = [
+  { label: 'Home',          href: '/explore',       icon: Home        },
+  { label: 'Blogs',         href: '/blogs',         icon: BookOpen    },
+  { label: 'Stories',       href: '/stories',       icon: BookMarked  },
+  { label: 'Bookmarks',     href: '/bookmarks',     icon: Bookmark    },
+  { label: 'Notifications', href: '/notifications', icon: Bell, badge: 2 },
+  { label: 'Stats',         href: '/stats',         icon: BarChart2   },
+  { label: 'Profile',       href: '/profile',       icon: User        },
+  { label: 'Settings',      href: '/settings',      icon: Settings    },
 ];
 
 // Mock user — swap for real auth context
@@ -140,26 +138,6 @@ function NavLink({ item, collapsed, pathname, onClick }) {
   );
 }
 
-// ─── Section group ────────────────────────────────────────────────────────────
-function SectionGroup({ title, items, collapsed, pathname }) {
-  return (
-    <div>
-      {!collapsed && (
-        <p className="px-3 pt-3 pb-1.5 text-[0.66rem] font-bold uppercase tracking-widest"
-           style={{ color: 'var(--fg-4)' }}>
-          {title}
-        </p>
-      )}
-      {collapsed && <div className="mt-3 mx-auto w-5 border-t" style={{ borderColor: 'var(--border)' }} />}
-      <div className="flex flex-col gap-px">
-        {items.map(item => (
-          <NavLink key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function AuthSidebar({ collapsed, mobileOpen, onMobileClose }) {
   const pathname         = usePathname();
@@ -207,11 +185,13 @@ export default function AuthSidebar({ collapsed, mobileOpen, onMobileClose }) {
         </div>
 
         {/* ── Nav ── */}
-        <nav className="flex-1 flex flex-col px-3 py-2 gap-px"
+        <nav className="flex-1 flex flex-col px-3 py-2"
              style={{ overflowY: collapsed ? 'visible' : 'auto', overflowX: 'visible', scrollbarWidth: 'none' }}>
-          <SectionGroup title="Platform" items={NAV_MAIN}    collapsed={collapsed} pathname={pathname} />
-          <SectionGroup title="Library"  items={NAV_LIBRARY} collapsed={collapsed} pathname={pathname} />
-          <SectionGroup title="You"      items={NAV_YOU}     collapsed={collapsed} pathname={pathname} />
+          <div className="flex flex-col gap-px">
+            {NAV.map(item => (
+              <NavLink key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
+            ))}
+          </div>
 
           {/* Write CTA card (expanded only) */}
           {!collapsed && !dismissed && (

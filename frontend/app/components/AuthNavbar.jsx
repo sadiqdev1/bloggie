@@ -14,13 +14,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link        from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, Bell, ChevronDown, PanelLeftClose, PanelLeftOpen,
-  Settings, LogOut, Sun, Moon, Search, X,
+  Settings, LogOut, Sun, Moon, Search,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
-// import Link from 'next/link';
 
 const MOCK_USER = {
   name:     'Sadiq Dev',
@@ -54,14 +53,15 @@ function useTheme() {
 
 // ─── Page title map ───────────────────────────────────────────────────────────
 const PAGE_TITLES = {
-  '/explore':       { title: 'Feed',          subtitle: 'Your personalised reading feed' },
+  '/explore':       { title: 'Home',          subtitle: 'Your personalised reading feed' },
   '/blogs':         { title: 'Blogs',          subtitle: 'Browse all public posts'        },
+  '/stories':       { title: 'Stories',        subtitle: 'Long-form & featured reads'     },
+  '/stats':         { title: 'Stats',          subtitle: 'Your writing analytics'          },
   '/search':        { title: 'Search',         subtitle: null                             },
   '/write':         { title: 'Write',          subtitle: 'Compose a new post'             },
   '/bookmarks':     { title: 'Bookmarks',      subtitle: 'Your saved posts'               },
   '/notifications': { title: 'Notifications',  subtitle: null                             },
   '/profile':       { title: 'Profile',        subtitle: null                             },
-  '/dashboard':     { title: 'Dashboard',      subtitle: null                             },
   '/settings':      { title: 'Settings',       subtitle: null                             },
 };
 
@@ -69,37 +69,26 @@ const PAGE_TITLES = {
 export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed }) {
   const { theme, toggle: toggleTheme } = useTheme();
   const pathname     = usePathname();
+  const router       = useRouter();
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchVal,  setSearchVal]  = useState('');
   const searchRef    = useRef(null);
-  const unread       = 2; // mock — swap for real
+  const unread       = 2;
 
   const { title, subtitle } = PAGE_TITLES[pathname] ?? { title: 'Bloggie', subtitle: null };
 
   useEffect(() => { setAvatarOpen(false); }, [pathname]);
 
-  // ⌘K to open search
-  useEffect(() => {
-    const h = e => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 40); }
-      if (e.key === 'Escape') setSearchOpen(false);
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, []);
-
   return (
-    <>
-      <header
-        className="flex items-center gap-3 px-4 sticky top-0 z-20 shrink-0"
-        style={{
-          height:       56,
-          background:   'var(--bg-card)',
-          borderBottom: '1px solid var(--border)',
-          backdropFilter: 'blur(16px)',
-        }}
-      >
+    <header
+      className="flex items-center gap-3 px-4 sticky top-0 z-20 shrink-0"
+      style={{
+        height:         56,
+        background:     'var(--bg-card)',
+        borderBottom:   '1px solid var(--border)',
+        backdropFilter: 'blur(16px)',
+      }}
+    >
         {/* ── Left ── */}
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Mobile hamburger */}
@@ -140,7 +129,7 @@ export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed })
           </div>
         </div>
 
-        {/* ── Centre: real search input ── */}
+        {/* ── Centre: search input — redirects to /search ── */}
         <div className="flex-1 max-w-sm mx-4 hidden md:flex">
           <div className="relative w-full">
             <Search size={14} strokeWidth={2}
@@ -151,29 +140,22 @@ export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed })
               type="text"
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
-              onFocus={() => setSearchOpen(true)}
+              onFocus={() => router.push('/search')}
               onKeyDown={e => {
-                if (e.key === 'Enter' && searchVal.trim()) {
-                  window.location.href = `/search?q=${encodeURIComponent(searchVal.trim())}`;
+                if (e.key === 'Enter') {
+                  const q = searchVal.trim();
+                  router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
                 }
-                if (e.key === 'Escape') { setSearchOpen(false); setSearchVal(''); e.currentTarget.blur(); }
               }}
               placeholder="Search posts, writers…"
-              className="w-full h-8 pl-8 pr-8 rounded-lg text-[0.8rem] border outline-none transition-all"
+              className="w-full h-8 pl-8 pr-3 rounded-lg text-[0.8rem] border outline-none transition-all cursor-pointer"
               style={{
                 background:  'var(--bg)',
                 color:       'var(--fg)',
-                borderColor: searchOpen ? 'var(--accent)' : 'var(--border)',
-                boxShadow:   searchOpen ? '0 0 0 2px var(--accent-dim)' : 'none',
+                borderColor: 'var(--border)',
               }}
+              readOnly
             />
-            {searchVal && (
-              <button onClick={() => { setSearchVal(''); setSearchOpen(false); }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer"
-                style={{ color: 'var(--fg-4)' }}>
-                <X size={11} strokeWidth={2.5} />
-              </button>
-            )}
           </div>
         </div>
 
@@ -273,71 +255,5 @@ export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed })
           </div>
         </div>
       </header>
-
-      {/* ── Full-screen search overlay (⌘K) ── */}
-      {searchOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60]"
-            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setSearchOpen(false)}
-          />
-          <div
-            className="fixed top-[14vh] left-1/2 -translate-x-1/2 w-full max-w-lg z-[70] rounded-xl border overflow-hidden"
-            style={{ background: 'var(--bg-card)', borderColor: 'var(--border)',
-                     boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
-            {/* Input */}
-            <div className="flex items-center gap-3 px-4 border-b" style={{ height: 52, borderColor: 'var(--border)' }}>
-              <Search size={16} strokeWidth={2} style={{ color: 'var(--fg-3)', flexShrink: 0 }} />
-              <input
-                ref={searchRef}
-                type="text"
-                value={searchVal}
-                onChange={e => setSearchVal(e.target.value)}
-                placeholder="Search posts, writers, topics…"
-                className="flex-1 bg-transparent text-[0.9rem] outline-none"
-                style={{ color: 'var(--fg)' }}
-              />
-              {searchVal
-                ? <button onClick={() => setSearchVal('')} style={{ color: 'var(--fg-4)' }} className="cursor-pointer hover:text-[var(--fg)] transition-colors"><X size={14} strokeWidth={2.5} /></button>
-                : <kbd className="text-[0.68rem] px-1.5 py-0.5 rounded border font-mono" style={{ borderColor: 'var(--border)', color: 'var(--fg-4)', background: 'var(--bg)' }}>ESC</kbd>
-              }
-            </div>
-
-            {/* Results */}
-            <div className="px-2 py-2">
-              <p className="px-2 py-1.5 text-[0.66rem] font-bold uppercase tracking-widest" style={{ color: 'var(--fg-4)' }}>
-                {searchVal ? `Results for "${searchVal}"` : 'Quick links'}
-              </p>
-              {(searchVal
-                ? ['negative-space-ui', 'stop-using-orms', 'slow-mornings']
-                : [{ label: 'Your feed', href: '/explore' }, { label: 'Discover', href: '/blogs' }, { label: 'Write a post', href: '/write' }, { label: 'Bookmarks', href: '/bookmarks' }]
-              ).map((item, i) => {
-                const href  = typeof item === 'string' ? `/blog/${item}` : item.href;
-                const label = typeof item === 'string' ? item.replace(/-/g, ' ') : item.label;
-                return (
-                  <Link key={i} href={href} onClick={() => setSearchOpen(false)}
-                    className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-[0.875rem] transition-colors cursor-pointer"
-                    style={{ color: 'var(--fg-2)', textDecoration: 'none' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <Search size={13} strokeWidth={1.8} style={{ color: 'var(--fg-4)', flexShrink: 0 }} />
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center gap-4 px-4 py-2 border-t text-[0.7rem]"
-                 style={{ borderColor: 'var(--border)', color: 'var(--fg-4)' }}>
-              <span><kbd className="font-mono">↑↓</kbd> navigate</span>
-              <span><kbd className="font-mono">↵</kbd> open</span>
-              <span><kbd className="font-mono">ESC</kbd> close</span>
-            </div>
-          </div>
-        </>
-      )}
-    </>
   );
 }
