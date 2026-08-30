@@ -1,26 +1,18 @@
 'use client';
 
-/**
- * AuthNavbar (TopBar) — Taskora-style top bar adapted for Bloggie.
- *
- * Exact pattern from /c/xampp/htdocs/taskora/frontend/src/components/TopBar.jsx:
- *  • height: 56px sticky, surface bg, 1px border-bottom
- *  • Left: mobile menu trigger | collapse toggle (desktop) | page title
- *  • Right: theme toggle | notifications bell (dot badge) | avatar dropdown
- *  • Notifications: link to /notifications page (no inline dropdown overload)
- *  • Avatar dropdown: settings + sign out (exact Taskora mouseEnter/Leave style)
- *  • Command-palette search accessible via ⌘K (full-screen overlay)
- */
-
 import { useState, useEffect, useRef } from 'react';
-import Link        from 'next/link';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Menu, Bell, ChevronDown, PanelLeftClose, PanelLeftOpen,
-  Settings, LogOut, Sun, Moon, Search,
+  PanelLeftClose, PanelLeftOpen, Menu,
+  Search, Bell, Sun, Moon,
+  User, Settings, Bookmark, LogOut,
+  PenSquare, ChevronDown,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
 
+// ─── Mock user ────────────────────────────────────────────────────────────────
 const MOCK_USER = {
   name:     'Sadiq Dev',
   username: 'sadiqdev1',
@@ -29,231 +21,220 @@ const MOCK_USER = {
   color:    'var(--accent)',
 };
 
-// ─── Theme hook (mirrors Taskora exactly) ─────────────────────────────────────
+// ─── Theme ────────────────────────────────────────────────────────────────────
 function useTheme() {
   const [theme, setTheme] = useState('light');
-
   useEffect(() => {
     const stored = localStorage.getItem('bloggie_theme') ?? 'light';
     setTheme(stored);
-    if (stored === 'dark') document.documentElement.classList.add('dark');
-    else                   document.documentElement.classList.remove('dark');
+    document.documentElement.classList.toggle('dark', stored === 'dark');
   }, []);
-
   function toggle() {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
     localStorage.setItem('bloggie_theme', next);
-    if (next === 'dark') document.documentElement.classList.add('dark');
-    else                 document.documentElement.classList.remove('dark');
+    document.documentElement.classList.toggle('dark', next === 'dark');
   }
-
   return { theme, toggle };
 }
 
-// ─── Page title map ───────────────────────────────────────────────────────────
-const PAGE_TITLES = {
-  '/explore':       { title: 'Home',          subtitle: 'Your personalised reading feed' },
-  '/blogs':         { title: 'Blogs',          subtitle: 'Browse all public posts'        },
-  '/stories':       { title: 'Stories',        subtitle: 'Long-form & featured reads'     },
-  '/stats':         { title: 'Stats',          subtitle: 'Your writing analytics'          },
-  '/search':        { title: 'Search',         subtitle: null                             },
-  '/write':         { title: 'Write',          subtitle: 'Compose a new post'             },
-  '/bookmarks':     { title: 'Bookmarks',      subtitle: 'Your saved posts'               },
-  '/notifications': { title: 'Notifications',  subtitle: null                             },
-  '/profile':       { title: 'Profile',        subtitle: null                             },
-  '/settings':      { title: 'Settings',       subtitle: null                             },
-};
+// ─── Dropdown menu ────────────────────────────────────────────────────────────
+const MENU_ITEMS = [
+  { icon: User,      label: 'Profile',    href: '/profile'  },
+  { icon: PenSquare, label: 'Write',      href: '/write'    },
+  { icon: Bookmark,  label: 'Bookmarks',  href: '/bookmarks'},
+  { icon: Settings,  label: 'Settings',   href: '/settings' },
+];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function AvatarDropdown({ open, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open, onClose]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={ref}
+          initial={{ opacity: 0, scale: 0.95, y: -8 }}
+          animate={{ opacity: 1, scale: 1,    y: 0   }}
+          exit={{   opacity: 0, scale: 0.95, y: -8   }}
+          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 rounded-2xl border overflow-hidden"
+          style={{
+            background:  'var(--bg-card)',
+            borderColor: 'var(--border)',
+            boxShadow:   '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+          }}
+        >
+          {/* User header */}
+          <div className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white"
+                   style={{ background: MOCK_USER.color }}>
+                {MOCK_USER.initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--fg)' }}>{MOCK_USER.name}</p>
+                <p className="text-xs truncate" style={{ color: 'var(--fg-3)' }}>{MOCK_USER.email}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu items */}
+          <div className="p-1.5">
+            {MENU_ITEMS.map(({ icon: Icon, label, href }) => (
+              <Link key={href} href={href} onClick={onClose}
+                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+                style={{ color: 'var(--fg-2)', textDecoration: 'none' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <Icon size={14} strokeWidth={1.8} style={{ color: 'var(--fg-3)', flexShrink: 0 }} />
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Divider + sign out */}
+          <div className="p-1.5 pt-0 border-t" style={{ borderColor: 'var(--border)' }}>
+            <button
+              className="flex items-center gap-2.5 w-full px-3 py-2 mt-1.5 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+              style={{ color: '#ef4444' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <LogOut size={14} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+              Sign out
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── Navbar ───────────────────────────────────────────────────────────────────
 export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed }) {
   const { theme, toggle: toggleTheme } = useTheme();
-  const pathname     = usePathname();
-  const router       = useRouter();
+  const router     = useRouter();
+  const pathname   = usePathname();
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [searchVal,  setSearchVal]  = useState('');
-  const searchRef    = useRef(null);
-  const unread       = 2;
-
-  const { title, subtitle } = PAGE_TITLES[pathname] ?? { title: 'Bloggie', subtitle: null };
+  const avatarRef  = useRef(null);
+  const unread     = 2;
 
   useEffect(() => { setAvatarOpen(false); }, [pathname]);
 
   return (
     <header
-      className="flex items-center gap-3 px-4 sticky top-0 z-20 shrink-0"
+      className="flex items-center gap-2 px-3 shrink-0 sticky top-0 z-20"
       style={{
         height:         56,
         background:     'var(--bg-card)',
         borderBottom:   '1px solid var(--border)',
-        backdropFilter: 'blur(16px)',
       }}
     >
-        {/* ── Left ── */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Mobile hamburger */}
+      {/* ── Left: collapse toggle + logo ── */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Mobile hamburger */}
+        <button onClick={onMenuClick}
+          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+          style={{ color: 'var(--fg-3)' }} aria-label="Open menu">
+          <Menu size={17} strokeWidth={2} />
+        </button>
+
+        {/* Desktop collapse toggle */}
+        <button onClick={onToggleCollapse}
+          className="hidden lg:flex w-9 h-9 items-center justify-center rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+          style={{ color: 'var(--fg-3)' }}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+          {collapsed
+            ? <PanelLeftOpen  size={16} strokeWidth={1.8} />
+            : <PanelLeftClose size={16} strokeWidth={1.8} />
+          }
+        </button>
+
+        {/* Brand logo */}
+        <AppLogo size="md" />
+      </div>
+
+      {/* ── Centre: search ── */}
+      <div className="flex-1 max-w-xs mx-auto hidden md:flex">
+        <button
+          onClick={() => router.push('/search')}
+          className="flex items-center gap-2 w-full h-8 px-3 rounded-lg text-sm border cursor-pointer transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-hover)]"
+          style={{ borderColor: 'var(--border)', background: 'var(--bg)', color: 'var(--fg-3)' }}
+        >
+          <Search size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+          <span className="text-[0.8rem] flex-1 text-left">Search…</span>
+          <kbd className="hidden lg:inline text-[0.62rem] px-1.5 py-0.5 rounded border font-mono"
+               style={{ borderColor: 'var(--border)', color: 'var(--fg-4)', background: 'var(--bg-card)' }}>
+            ⌘K
+          </kbd>
+        </button>
+      </div>
+
+      {/* ── Right: theme | bell | avatar ── */}
+      <div className="flex items-center gap-1 ml-auto shrink-0">
+
+        {/* Mobile search */}
+        <Link href="/search"
+          className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+          style={{ color: 'var(--fg-3)' }} aria-label="Search">
+          <Search size={16} strokeWidth={1.8} />
+        </Link>
+
+        {/* Theme toggle */}
+        <button onClick={toggleTheme}
+          className="w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+          style={{ color: 'var(--fg-3)' }}
+          aria-label={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+          {theme === 'dark'
+            ? <Sun  size={16} strokeWidth={1.8} />
+            : <Moon size={16} strokeWidth={1.8} />
+          }
+        </button>
+
+        {/* Notifications */}
+        <Link href="/notifications"
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+          style={{ color: 'var(--fg-3)' }}
+          aria-label="Notifications">
+          <Bell size={17} strokeWidth={1.8} />
+          {unread > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-2"
+                  style={{ background: 'var(--accent)', borderColor: 'var(--bg-card)' }} />
+          )}
+        </Link>
+
+        {/* Avatar */}
+        <div className="relative" ref={avatarRef}>
           <button
-            onClick={onMenuClick}
-            className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-            style={{ color: 'var(--fg-3)' }}
-            aria-label="Open menu">
-            <Menu size={18} strokeWidth={2} />
+            onClick={() => setAvatarOpen(o => !o)}
+            className="flex items-center gap-1.5 h-9 pl-1 pr-2 rounded-xl cursor-pointer transition-colors hover:bg-[var(--bg-hover)]"
+            aria-label="Account menu"
+            style={{ color: 'var(--fg)' }}
+          >
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.65rem] font-black shrink-0"
+                 style={{ background: MOCK_USER.color }}>
+              {MOCK_USER.initials}
+            </div>
+            <span className="hidden sm:block text-[0.8rem] font-semibold"
+                  style={{ color: 'var(--fg)' }}>
+              {MOCK_USER.name.split(' ')[0]}
+            </span>
+            <motion.span animate={{ rotate: avatarOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown size={12} strokeWidth={2.5} style={{ color: 'var(--fg-4)' }} />
+            </motion.span>
           </button>
 
-          {/* Desktop collapse toggle */}
-          <button
-            onClick={onToggleCollapse}
-            className="hidden lg:flex w-9 h-9 items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-            style={{ color: 'var(--fg-3)' }}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-            {collapsed
-              ? <PanelLeftOpen  size={17} strokeWidth={1.8} />
-              : <PanelLeftClose size={17} strokeWidth={1.8} />
-            }
-          </button>
-
-          {/* Page title — desktop */}
-          <div className="hidden sm:block ml-1">
-            <h1 className="font-bold text-[0.95rem] leading-tight tracking-[-0.01em]"
-                style={{ color: 'var(--fg)' }}>
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="text-[0.72rem]" style={{ color: 'var(--fg-3)' }}>{subtitle}</p>
-            )}
-          </div>
-
-          {/* Logo on mobile */}
-          <div className="sm:hidden ml-1">
-            <AppLogo size="md" />
-          </div>
+          <AvatarDropdown open={avatarOpen} onClose={() => setAvatarOpen(false)} />
         </div>
-
-        {/* ── Centre: search input — redirects to /search ── */}
-        <div className="flex-1 max-w-sm mx-4 hidden md:flex">
-          <div className="relative w-full">
-            <Search size={14} strokeWidth={2}
-              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: 'var(--fg-4)' }} />
-            <input
-              ref={searchRef}
-              type="text"
-              value={searchVal}
-              onChange={e => setSearchVal(e.target.value)}
-              onFocus={() => router.push('/search')}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  const q = searchVal.trim();
-                  router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
-                }
-              }}
-              placeholder="Search posts, writers…"
-              className="w-full h-8 pl-8 pr-3 rounded-lg text-[0.8rem] border outline-none transition-all cursor-pointer"
-              style={{
-                background:  'var(--bg)',
-                color:       'var(--fg)',
-                borderColor: 'var(--border)',
-              }}
-              readOnly
-            />
-          </div>
-        </div>
-
-        {/* ── Right ── */}
-        <div className="flex items-center ml-auto shrink-0 gap-1"
-             style={{ borderLeft: '1px solid var(--border)', paddingLeft: 10 }}>
-
-          {/* Mobile: search icon links to /search page */}
-          <Link href="/search"
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-            style={{ color: 'var(--fg-3)' }}
-            aria-label="Search">
-            <Search size={16} strokeWidth={1.8} />
-          </Link>
-
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-            style={{ color: 'var(--fg-3)' }}
-            aria-label={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-            {theme === 'dark' ? <Sun size={16} strokeWidth={1.8} /> : <Moon size={16} strokeWidth={1.8} />}
-          </button>
-
-          {/* Notifications */}
-          <Link
-            href="/notifications"
-            className="relative w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-            style={{ color: 'var(--fg-3)' }}
-            aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}>
-            <Bell size={17} strokeWidth={1.8} />
-            {unread > 0 && (
-              <span
-                className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-2"
-                style={{ background: 'var(--accent)', borderColor: 'var(--bg-card)' }}
-              />
-            )}
-          </Link>
-
-          {/* Avatar dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setAvatarOpen(o => !o)}
-              className="flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
-              aria-label="Account menu"
-              style={{ color: 'var(--fg)' }}>
-              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center text-white text-[0.65rem] font-black shrink-0"
-                   style={{ background: MOCK_USER.color }}>
-                {MOCK_USER.initials}
-              </div>
-              <span className="hidden sm:block text-[0.875rem] font-semibold max-w-[96px] truncate"
-                    style={{ color: 'var(--fg)' }}>
-                {MOCK_USER.name.split(' ')[0]}
-              </span>
-              <ChevronDown size={12} strokeWidth={2.5}
-                className={`transition-transform duration-150 ${avatarOpen ? 'rotate-180' : ''}`}
-                style={{ color: 'var(--fg-3)' }} />
-            </button>
-
-            {avatarOpen && (
-              <>
-                {/* Backdrop */}
-                <div className="fixed inset-0 z-40" onClick={() => setAvatarOpen(false)} />
-                <div className="absolute right-0 top-full mt-1.5 z-50 rounded-xl overflow-hidden py-1 min-w-[180px]"
-                     style={{ background: 'var(--bg-card)', border: '1px solid var(--border)',
-                              boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-                  {/* User info */}
-                  <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                    <p className="text-[0.875rem] font-semibold leading-none mb-1" style={{ color: 'var(--fg)' }}>
-                      {MOCK_USER.name}
-                    </p>
-                    <p className="text-[0.72rem]" style={{ color: 'var(--fg-3)' }}>{MOCK_USER.email}</p>
-                  </div>
-
-                  <Link href="/settings" onClick={() => setAvatarOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-[0.875rem] font-medium transition-colors cursor-pointer"
-                    style={{ color: 'var(--fg-2)', textDecoration: 'none' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <Settings size={14} strokeWidth={1.8} style={{ color: 'var(--fg-4)', flexShrink: 0 }} />
-                    Settings
-                  </Link>
-
-                  <div style={{ height: 1, background: 'var(--border)', margin: '2px 0' }} />
-
-                  <button
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[0.875rem] font-medium transition-colors cursor-pointer"
-                    style={{ color: 'var(--fg-3)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.color = '#ef4444'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--fg-3)'; }}>
-                    <LogOut size={14} strokeWidth={1.8} className="shrink-0" />
-                    Sign out
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      </div>
+    </header>
   );
 }
