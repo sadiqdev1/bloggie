@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 
 import AuthLayout    from '@/app/components/AuthLayout';
-import Footer        from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 
 // ─── Shared field ─────────────────────────────────────────────────────────────
@@ -381,7 +380,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </AuthLayout>
-      <Footer />
     </>
   );
 }

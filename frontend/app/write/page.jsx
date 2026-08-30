@@ -35,9 +35,7 @@ import {
 } from 'lucide-react';
 import NextLink  from 'next/link';
 import { useRouter } from 'next/navigation';
-import AuthNavbar    from '@/app/components/AuthNavbar';
-import AuthMobileNav from '@/app/components/AuthMobileNav';
-import ScrollProgress from '@/app/components/ui/ScrollProgress';
+import AuthLayout    from '@/app/components/AuthLayout';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TAGS_LIST = [
@@ -233,15 +231,12 @@ export default function WritePage() {
   ];
 
   return (
-    <>
-      <ScrollProgress />
-      <AuthNavbar />
-
-      <div className="pt-14 pb-16 md:pb-0 min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
+    <AuthLayout>
+      <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
 
         {/* ── Sticky editor top bar ── */}
         <div
-          className="sticky top-14 z-30 border-b flex items-center justify-between gap-3 px-4 md:px-8 h-11"
+          className="sticky top-0 z-30 border-b flex items-center justify-between gap-3 px-4 md:px-8 h-11"
           style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
         >
           {/* Left: back + status */}
@@ -519,8 +514,6 @@ export default function WritePage() {
         </div>
       </div>
 
-      <AuthMobileNav />
-
       {/* ── Publish modal ── */}
       <AnimatePresence>
         {publishStep >= 1 && (
@@ -725,6 +718,6 @@ export default function WritePage() {
         /* Focus ring off (we handle it manually) */
         .tiptap:focus { outline: none; }
       `}</style>
-    </>
+    </AuthLayout>
   );
 }

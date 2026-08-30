@@ -17,7 +17,6 @@ import {
 import Link from 'next/link';
 import NextImage from 'next/image';
 import AuthLayout    from '@/app/components/AuthLayout';
-import Footer        from '@/app/components/Footer';
 import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import Reveal from '@/app/components/ui/Reveal';
 import { fadeUp, stagger } from '@/app/lib/motion';
@@ -340,7 +339,6 @@ export default function ProfilePage() {
           </AnimatePresence>
       </div>
       </AuthLayout>
-      <Footer />
     </>
   );
 }

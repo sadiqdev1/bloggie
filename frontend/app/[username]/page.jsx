@@ -18,11 +18,8 @@ import { FaGithub   } from 'react-icons/fa6';
 import Link      from 'next/link';
 import NextImage from 'next/image';
 
-import AuthNavbar    from '@/app/components/AuthNavbar';
-import AuthMobileNav from '@/app/components/AuthMobileNav';
-import Footer        from '@/app/components/Footer';
+import AuthLayout    from '@/app/components/AuthLayout';
 import Reveal        from '@/app/components/ui/Reveal';
-import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import { stagger, fadeUp } from '@/app/lib/motion';
 
 // ─── Mock author data ─────────────────────────────────────────────────────────
@@ -137,12 +134,8 @@ export default function AuthorPage({ params }) {
   ];
 
   return (
-    <>
-      <ScrollProgress />
-      <AuthNavbar />
-      <AuthMobileNav />
-
-      <main className="pt-14 pb-16 md:pb-0 min-h-screen" style={{ background:'var(--bg)' }}>
+    <AuthLayout>
+      <main style={{ minHeight: '100vh' }}>
 
         {/* ── Cover — static image, scroll-driven blur ── */}
         <div className="relative overflow-hidden" style={{ height:'clamp(200px,32vh,340px)' }} ref={coverRef}>
@@ -332,7 +325,6 @@ export default function AuthorPage({ params }) {
           </AnimatePresence>
         </div>
       </main>
-      <Footer />
-    </>
+    </AuthLayout>
   );
 }

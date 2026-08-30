@@ -9,9 +9,7 @@ import {
 } from 'lucide-react';
 import Link      from 'next/link';
 import NextImage from 'next/image';
-import AuthNavbar from '@/app/components/AuthNavbar';
-import AuthMobileNav from '@/app/components/AuthMobileNav';
-import Footer    from '@/app/components/Footer';
+import AuthLayout    from '@/app/components/AuthLayout';
 import Reveal    from '@/app/components/ui/Reveal';
 import { staggerSlow, fadeUp } from '@/app/lib/motion';
 import { FaXTwitter } from 'react-icons/fa6';
@@ -276,14 +274,11 @@ export default function PostPage({ params }) {
   const coverY    = useSpring(rawCoverY, { stiffness: 60, damping: 20, mass: 0.8 });
 
   return (
-    <>
+    <AuthLayout>
       <ReadingProgress />
-      <AuthNavbar />
       <FloatingToolbar liked={liked} saved={saved} onLike={() => setLiked(l=>!l)} onSave={() => setSaved(s=>!s)} />
-      {/* Mobile bottom nav */}
-      <AuthMobileNav />
 
-      <main className="pt-14 pb-16 md:pb-0 min-h-screen" style={{ background:'var(--bg)' }}>
+      <main style={{ background:'var(--bg)' }}>
 
         {/* ── Hero cover ── */}
         <section className="relative overflow-hidden" style={{ height:'clamp(320px,50vh,540px)' }}>
@@ -605,7 +600,6 @@ export default function PostPage({ params }) {
         </section>
 
       </main>
-      <Footer />
-    </>
+    </AuthLayout>
   );
 }

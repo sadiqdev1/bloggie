@@ -18,9 +18,9 @@ import NextImage from 'next/image';
 import Reveal      from '@/app/components/ui/Reveal';
 import MagneticBtn  from '@/app/components/ui/MagneticBtn';
 import AuthLayout    from '@/app/components/AuthLayout';
-import Footer       from '@/app/components/Footer';
-import ScrollProgress from '@/app/components/ui/ScrollProgress';
 import { stagger, fadeUp, staggerSlow } from '@/app/lib/motion';
+import ScrollProgress from '@/app/components/ui/ScrollProgress';
+
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const FEED_TABS = [
@@ -356,7 +356,7 @@ export default function ExplorePage() {
         {/* ── Sidebar ── */}
         <Sidebar />
       </div>
-      <Footer />
+      
         </div>{/* end flex-1 main content */}
       </div>{/* end flex sidebar+content */}
       </AuthLayout>
