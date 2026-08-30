@@ -17,9 +17,10 @@ import Link        from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Menu, Bell, ChevronDown, PanelLeftClose, PanelLeftOpen,
-  Settings, LogOut, Sun, Moon, Search, X, Command,
+  Settings, LogOut, Sun, Moon, Search, X,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
+// import Link from 'next/link';
 
 const MOCK_USER = {
   name:     'Sadiq Dev',
@@ -54,7 +55,8 @@ function useTheme() {
 // ─── Page title map ───────────────────────────────────────────────────────────
 const PAGE_TITLES = {
   '/explore':       { title: 'Feed',          subtitle: 'Your personalised reading feed' },
-  '/blogs':         { title: 'Discover',       subtitle: 'Browse all public posts'       },
+  '/blogs':         { title: 'Blogs',          subtitle: 'Browse all public posts'        },
+  '/search':        { title: 'Search',         subtitle: null                             },
   '/write':         { title: 'Write',          subtitle: 'Compose a new post'             },
   '/bookmarks':     { title: 'Bookmarks',      subtitle: 'Your saved posts'               },
   '/notifications': { title: 'Notifications',  subtitle: null                             },
@@ -132,9 +134,46 @@ export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed })
             )}
           </div>
 
-          {/* Logo on mobile when no title */}
-          <div className="sm:hidden">
-            <AppLogo size="sm" />
+          {/* Logo on mobile */}
+          <div className="sm:hidden ml-1">
+            <AppLogo size="md" />
+          </div>
+        </div>
+
+        {/* ── Centre: real search input ── */}
+        <div className="flex-1 max-w-sm mx-4 hidden md:flex">
+          <div className="relative w-full">
+            <Search size={14} strokeWidth={2}
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: 'var(--fg-4)' }} />
+            <input
+              ref={searchRef}
+              type="text"
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && searchVal.trim()) {
+                  window.location.href = `/search?q=${encodeURIComponent(searchVal.trim())}`;
+                }
+                if (e.key === 'Escape') { setSearchOpen(false); setSearchVal(''); e.currentTarget.blur(); }
+              }}
+              placeholder="Search posts, writers…"
+              className="w-full h-8 pl-8 pr-8 rounded-lg text-[0.8rem] border outline-none transition-all"
+              style={{
+                background:  'var(--bg)',
+                color:       'var(--fg)',
+                borderColor: searchOpen ? 'var(--accent)' : 'var(--border)',
+                boxShadow:   searchOpen ? '0 0 0 2px var(--accent-dim)' : 'none',
+              }}
+            />
+            {searchVal && (
+              <button onClick={() => { setSearchVal(''); setSearchOpen(false); }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer"
+                style={{ color: 'var(--fg-4)' }}>
+                <X size={11} strokeWidth={2.5} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -142,27 +181,21 @@ export default function AuthNavbar({ onMenuClick, onToggleCollapse, collapsed })
         <div className="flex items-center ml-auto shrink-0 gap-1"
              style={{ borderLeft: '1px solid var(--border)', paddingLeft: 10 }}>
 
-          {/* Search trigger */}
-          <button
-            onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 40); }}
-            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
+          {/* Mobile: search icon links to /search page */}
+          <Link href="/search"
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
             style={{ color: 'var(--fg-3)' }}
-            aria-label="Search (⌘K)"
-            title="Search (⌘K)">
+            aria-label="Search">
             <Search size={16} strokeWidth={1.8} />
-          </button>
+          </Link>
 
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
             className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-[var(--bg-hover)] cursor-pointer"
             style={{ color: 'var(--fg-3)' }}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-            {theme === 'dark'
-              ? <Sun  size={16} strokeWidth={1.8} />
-              : <Moon size={16} strokeWidth={1.8} />
-            }
+            aria-label={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+            {theme === 'dark' ? <Sun size={16} strokeWidth={1.8} /> : <Moon size={16} strokeWidth={1.8} />}
           </button>
 
           {/* Notifications */}

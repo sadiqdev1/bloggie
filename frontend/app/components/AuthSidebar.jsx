@@ -17,18 +17,16 @@ import Link       from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  Home, Compass, PenSquare, Bookmark, Bell,
-  User, Settings, TrendingUp, Rss, LayoutDashboard,
-  ChevronsUpDown, LogOut, X, Gift,
+  Home, BookOpen, PenSquare, Bookmark, Bell,
+  User, Settings, LayoutDashboard,
+  ChevronsUpDown, LogOut, X,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 const NAV_MAIN = [
-  { label: 'Feed',          href: '/explore',              icon: Home          },
-  { label: 'Discover',      href: '/blogs',                icon: Compass       },
-  { label: 'Trending',      href: '/blogs?tab=trending',   icon: TrendingUp    },
-  { label: 'Following',     href: '/explore?tab=following',icon: Rss           },
+  { label: 'Feed',      href: '/explore',   icon: Home    },
+  { label: 'Blogs',     href: '/blogs',     icon: BookOpen },
 ];
 const NAV_LIBRARY = [
   { label: 'Bookmarks',     href: '/bookmarks',     icon: Bookmark            },

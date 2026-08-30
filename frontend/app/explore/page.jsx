@@ -9,9 +9,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Flame, Clock, Star, Bookmark, UserPlus,
-  ArrowRight, ArrowLeft, Heart, BookOpen,
-  Sparkles, TrendingUp, Users, Bell, PenLine,
+  Flame, Clock, Star, Bookmark,
+  ArrowRight, Heart, BookOpen,
+  Sparkles, TrendingUp, Users, PenLine,
 } from 'lucide-react';
 import Link      from 'next/link';
 import NextImage from 'next/image';
@@ -19,15 +19,12 @@ import Reveal      from '@/app/components/ui/Reveal';
 import MagneticBtn  from '@/app/components/ui/MagneticBtn';
 import AuthLayout    from '@/app/components/AuthLayout';
 import { stagger, fadeUp, staggerSlow } from '@/app/lib/motion';
-import ScrollProgress from '@/app/components/ui/ScrollProgress';
 
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const FEED_TABS = [
-  { id:'foryou',    label:'For You',  icon: Sparkles    },
-  { id:'following', label:'Following',icon: Users       },
-  { id:'trending',  label:'Trending', icon: TrendingUp  },
-  { id:'bookmarks', label:'Saved',    icon: Bookmark    },
+  { id:'foryou',    label:'For You',  icon: Sparkles  },
+  { id:'bookmarks', label:'Saved',    icon: Bookmark  },
 ];
 
 const TAGS = ['All','Design','Engineering','Life','Business','Culture','Productivity','Health','Science','Finance'];
@@ -232,79 +229,65 @@ export default function ExplorePage() {
   );
 
   return (
-    <div style={{ background:'var(--bg)' }}>
-      <ScrollProgress />
-      <AuthLayout>
-
-      {/* ── Sidebar + main layout ── */}
+    <AuthLayout>
       <div className="flex">
-        {/* ── All page content inside this flex child ── */}
         <div className="flex-1 min-w-0">
 
-      {/* ── Top bar ── */}
-      <div className="sticky top-14 z-30 border-b"
-           style={{ background:'var(--bg)', borderColor:'var(--border)', backdropFilter:'blur(24px)' }}>
-        <div className="max-w-7xl mx-auto px-5">
+      {/* ── Tab bar — sticky right under navbar ── */}
+      <div className="sticky top-0 z-30 border-b"
+           style={{ background:'var(--bg-card)', borderColor:'var(--border)' }}>
+        <div className="px-5 flex items-center gap-0 overflow-x-auto" style={{ scrollbarWidth:'none' }}>
           {/* Feed tabs */}
-          <div className="flex items-center gap-0 overflow-x-auto" style={{ scrollbarWidth:'none' }}>
-            {FEED_TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setActiveTab(id)}
-                className="shrink-0 flex items-center gap-1.5 px-4 py-3.5 text-sm font-medium transition-all relative"
-                style={{ color: activeTab === id ? 'var(--accent)' : 'var(--fg-3)' }}>
-                <Icon size={14} strokeWidth={2} />
-                {label}
-                {activeTab === id && (
-                  <motion.span layoutId="explore-tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                    style={{ background:'var(--accent)' }}
-                    transition={{ type:'spring', stiffness:400, damping:30 }} />
-                )}
+          {FEED_TABS.map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => setActiveTab(id)}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-3.5 text-sm font-medium transition-all relative"
+              style={{ color: activeTab === id ? 'var(--accent)' : 'var(--fg-3)' }}>
+              <Icon size={14} strokeWidth={2} />
+              {label}
+              {activeTab === id && (
+                <motion.span layoutId="explore-tab-indicator"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                  style={{ background:'var(--accent)' }}
+                  transition={{ type:'spring', stiffness:400, damping:30 }} />
+              )}
+            </button>
+          ))}
+
+          {/* Divider */}
+          <div className="w-px h-5 mx-2 shrink-0" style={{ background:'var(--border)' }} />
+
+          {/* Tag chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto flex-1" style={{ scrollbarWidth:'none' }}>
+            {TAGS.map(tag => (
+              <button key={tag} onClick={() => setActiveTag(tag)}
+                className="shrink-0 h-7 px-3 rounded-lg text-xs font-medium transition-all my-1.5"
+                style={{
+                  background: activeTag === tag ? 'var(--accent)' : 'transparent',
+                  color:      activeTag === tag ? '#fff' : 'var(--fg-3)',
+                }}>
+                {tag}
               </button>
             ))}
-
-            {/* Divider */}
-            <div className="w-px h-5 mx-2 shrink-0" style={{ background:'var(--border)' }} />
-
-            {/* Tags */}
-            <div className="flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth:'none' }}>
-              {TAGS.map(tag => (
-                <button key={tag} onClick={() => setActiveTag(tag)}
-                  className="shrink-0 h-7 px-3 rounded-lg text-xs font-medium transition-all my-1.5"
-                  style={{
-                    background: activeTag === tag ? 'var(--accent)' : 'transparent',
-                    color:      activeTag === tag ? '#fff' : 'var(--fg-3)',
-                  }}>
-                  {tag}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 py-8 flex gap-8">
+      <div className="px-5 py-6 flex gap-8">
         {/* ── Main feed ── */}
         <div className="flex-1 min-w-0">
-          {/* Search + sort row */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="relative flex-1 max-w-sm">
-              <Search size={14} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                      style={{ color:'var(--fg-4)' }} />
-              <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-                placeholder="Search your feed…"
-                className="w-full h-9 pl-8 pr-3 rounded-xl text-sm border"
-                style={{ background:'var(--bg-card)', borderColor:'var(--border)', color:'var(--fg)', outline:'none' }} />
-            </div>
+          {/* Sort row only — search lives in the navbar */}
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-xs font-medium" style={{ color: 'var(--fg-3)' }}>Sort:</span>
             <div className="flex items-center gap-1">
               {SORT_OPTIONS.map(({ value, label, icon: Icon }) => (
                 <button key={value} onClick={() => setActiveSort(value)}
-                  className="flex items-center gap-1 h-9 px-3 rounded-xl text-xs font-medium transition-all"
+                  className="flex items-center gap-1 h-7 px-3 rounded-lg text-xs font-medium transition-all"
                   style={{
                     background: activeSort === value ? 'var(--accent-dim)' : 'var(--bg-card)',
                     color:      activeSort === value ? 'var(--accent)'     : 'var(--fg-3)',
                     border:     `1px solid ${activeSort === value ? 'var(--accent-glow)' : 'var(--border)'}`,
                   }}>
-                  <Icon size={12} strokeWidth={2} />{label}
+                  <Icon size={11} strokeWidth={2} />{label}
                 </button>
               ))}
             </div>
@@ -357,9 +340,8 @@ export default function ExplorePage() {
         <Sidebar />
       </div>
       
-        </div>{/* end flex-1 main content */}
-      </div>{/* end flex sidebar+content */}
-      </AuthLayout>
-    </div>
+        </div>{/* end flex-1 */}
+      </div>{/* end flex */}
+    </AuthLayout>
   );
 }
