@@ -1,6 +1,7 @@
 import { Inter, JetBrains_Mono, Bricolage_Grotesque } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
+import "flag-icons/css/flag-icons.min.css";
 import RouteProgress from "@/app/components/ui/RouteProgress";
 
 // ── Fonts ─────────────────────────────────────────────────────────────────────

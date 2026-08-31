@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, ArrowLeft, Heart, BookOpen, Search,
+  ArrowRight, ArrowLeft, Heart, BookOpen, Search, Bookmark, MoreHorizontal,
   Flame, Clock, Star, ArrowUpRight, PenLine,
 } from 'lucide-react';
 import Link      from 'next/link';
@@ -247,44 +247,127 @@ function HeroSlider() {
   );
 }
 
-// ─── Post card ────────────────────────────────────────────────────────────────
-function PostCard({ post, hovered, onHoverStart, onHoverEnd }) {
+// ─── Post card — same style as explore feed cards ─────────────────────────────
+function PostCard({ post }) {
+  const [saved,    setSaved]    = useState(false);
+  const [liked,    setLiked]    = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const h = e => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [menuOpen]);
+
   return (
-    <motion.div variants={fadeUp} whileHover={{ y: -6 }}
-      onHoverStart={onHoverStart} onHoverEnd={onHoverEnd}>
-      <Link href={`/blog/${post.slug}`}
-        className="flex flex-col rounded-2xl border overflow-hidden h-full group"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-        <div className="relative h-44 overflow-hidden">
-          <NextImage src={post.cover} alt={post.title} fill
-            sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,33vw"
-            className="object-cover transition-transform duration-500"
-            style={{ transform: hovered ? 'scale(1.06)' : 'scale(1)' }}
-            loading="lazy" placeholder="blur" blurDataURL={post.blur} />
-          <div className="absolute inset-0" style={{ background:'linear-gradient(to top,rgba(0,0,0,0.5) 0%,transparent 55%)' }} />
-          <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm"
-                style={{ background:'rgba(0,0,0,0.4)', color:'#fff' }}>{post.tag}</span>
-          <span className="absolute top-3 right-3 text-xs px-2 py-1 rounded-full backdrop-blur-sm"
-                style={{ background:'rgba(0,0,0,0.35)', color:'rgba(255,255,255,0.8)' }}>{post.readTime} read</span>
+    <motion.article variants={fadeUp} className="py-5 border-b relative"
+      style={{ borderColor: 'var(--border)' }}>
+
+      {/* Author meta */}
+      <div className="flex items-center gap-1.5 mb-2.5 text-xs font-medium" style={{ color: 'var(--fg-3)' }}>
+        <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0"
+             style={{ background: post.author.color }}>
+          {post.author.initials.charAt(0)}
         </div>
-        <div className="flex flex-col flex-1 p-5">
-          <h3 className="text-base font-semibold leading-snug mb-2 transition-colors"
-              style={{ color: hovered ? post.accent : 'var(--fg)' }}>{post.title}</h3>
-          <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color:'var(--fg-3)' }}>{post.excerpt}</p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                   style={{ background: post.author.color }}>{post.author.initials}</div>
-              <span className="text-xs font-medium" style={{ color:'var(--fg-3)' }}>{post.author.name}</span>
+        <span style={{ color: 'var(--fg-2)' }}>{post.author.name}</span>
+        <span style={{ color: 'var(--fg-3)' }}>·</span>
+        <span className="px-1.5 py-0.5 rounded-md text-[10px]"
+              style={{ background: 'var(--bg-hover)', color: 'var(--fg-3)' }}>{post.tag}</span>
+      </div>
+
+      {/* Title + excerpt + thumbnail */}
+      <div className="flex items-start gap-5">
+        <div className="flex-1 min-w-0">
+          <Link href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
+            <h2 className="font-bold leading-snug mb-1.5 cursor-pointer transition-colors hover:text-[var(--fg-2)]"
+                style={{ color: 'var(--fg)', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', lineHeight: 1.35 }}>
+              {post.title}
+            </h2>
+          </Link>
+          <p className="text-[0.82rem] leading-relaxed line-clamp-2 hidden sm:block"
+             style={{ color: 'var(--fg-3)' }}>
+            {post.excerpt}
+          </p>
+        </div>
+        {post.cover && (
+          <Link href={`/blog/${post.slug}`} className="shrink-0">
+            <div className="relative overflow-hidden rounded" style={{ width: 88, height: 66 }}>
+              <NextImage src={post.cover} alt={post.title} fill
+                className="object-cover hover:scale-105 transition-transform duration-500"
+                sizes="88px" loading="lazy" placeholder="blur" blurDataURL={post.blur} />
             </div>
-            <div className="flex items-center gap-3 text-xs" style={{ color:'var(--fg-4)' }}>
-              <span className="flex items-center gap-1"><BookOpen size={10} /> {post.reads}</span>
-              <span className="flex items-center gap-1"><Heart size={10} style={hovered ? { color:post.accent } : {}} /> {post.hearts}</span>
-            </div>
+          </Link>
+        )}
+      </div>
+
+      {/* Action bar */}
+      <div className="flex items-center gap-3.5 mt-3 text-xs font-medium" style={{ color: 'var(--fg-2)' }}>
+        <span>{post.readTime} read</span>
+
+        <button onClick={() => setLiked(l => !l)}
+          className="flex items-center gap-1 cursor-pointer transition-colors hover:text-[var(--accent)]"
+          style={{ color: liked ? 'var(--accent)' : 'var(--fg-2)' }}>
+          👏 {post.hearts}
+        </button>
+
+        <span className="flex items-center gap-1" style={{ color: 'var(--fg-2)' }}>
+          <BookOpen size={12} strokeWidth={2} /> {post.reads}
+        </span>
+
+        <div className="ml-auto flex items-center gap-2.5">
+          <button onClick={() => setSaved(s => !s)}
+            className="cursor-pointer transition-colors"
+            style={{ color: saved ? 'var(--accent)' : 'var(--fg-2)' }}>
+            <Bookmark size={14} strokeWidth={2}
+              style={{ fill: saved ? 'var(--accent)' : 'none', color: 'inherit' }} />
+          </button>
+
+          {/* Three-dot context menu */}
+          <div className="relative" ref={menuRef}>
+            <button onClick={() => setMenuOpen(o => !o)}
+              className="cursor-pointer transition-colors hover:text-[var(--fg)]"
+              style={{ color: 'var(--fg-2)' }}>
+              <MoreHorizontal size={15} strokeWidth={2} />
+            </button>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                  animate={{ opacity: 1, scale: 1,    y: 0   }}
+                  exit={{   opacity: 0, scale: 0.94, y: -6   }}
+                  transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute right-0 bottom-6 z-50 w-52 rounded-2xl border shadow-2xl overflow-hidden"
+                  style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+                  <div className="p-1.5">
+                    {[
+                      { label: 'Hide this story',    danger: false },
+                      { label: `Unfollow ${post.author.name.split(' ')[0]}`, danger: false },
+                      { label: 'Copy link',           danger: false },
+                      { label: 'Report this story',   danger: true  },
+                    ].map(({ label, danger }) => (
+                      <button key={label}
+                        onClick={() => {
+                          if (label === 'Copy link') navigator.clipboard?.writeText(`${window.location.origin}/blog/${post.slug}`);
+                          setMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer"
+                        style={{ color: danger ? '#ef4444' : 'var(--fg-2)' }}
+                        onMouseEnter={e => e.currentTarget.style.background = danger ? 'rgba(239,68,68,0.07)' : 'var(--bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </Link>
-    </motion.div>
+      </div>
+    </motion.article>
   );
 }
 
@@ -293,7 +376,6 @@ export default function BlogsPage() {
   const [activeTag,  setActiveTag]  = useState('All');
   const [activeSort, setActiveSort] = useState('trending');
   const [query,      setQuery]      = useState('');
-  const [hovered,    setHovered]    = useState(null);
 
   const filtered = POSTS.filter(p =>
     (activeTag === 'All' || p.tag === activeTag) &&
@@ -361,12 +443,10 @@ export default function BlogsPage() {
           {filtered.length > 0 ? (
             <motion.div initial="hidden" whileInView="visible"
               viewport={{ once: true }} variants={stagger}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((post, i) => (
-                <PostCard key={post.slug} post={post}
-                  hovered={hovered === i}
-                  onHoverStart={() => setHovered(i)}
-                  onHoverEnd={() => setHovered(null)} />
+              className="max-w-2xl mx-auto divide-y"
+              style={{ borderColor: 'var(--border)' }}>
+              {filtered.map(post => (
+                <PostCard key={post.slug} post={post} />
               ))}
             </motion.div>
           ) : (

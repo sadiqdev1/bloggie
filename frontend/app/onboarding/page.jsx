@@ -121,7 +121,11 @@ function LocationStep({ onNext }) {
             color:       selected ? 'var(--fg)' : 'var(--fg-4)',
           }}>
           {selected
-            ? <><span className="text-xl leading-none">{selected.flag}</span> {selected.name}</>
+            ? <>
+                <span className={`fi fi-${selected.code.toLowerCase()}`}
+                      style={{ width: 20, height: 15, borderRadius: 2, display: 'inline-block', flexShrink: 0 }} />
+                {selected.name}
+              </>
             : <><MapPin size={14} strokeWidth={2} style={{ color: 'var(--fg-4)' }} /> Select your country…</>
           }
           {selected && (
@@ -179,7 +183,8 @@ function LocationStep({ onNext }) {
                     style={{ color: 'var(--fg-2)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <span className="text-xl leading-none w-6 shrink-0">{c.flag}</span>
+                    <span className={`fi fi-${c.code.toLowerCase()}`}
+                          style={{ width: 20, height: 14, borderRadius: 2, display: 'inline-block', flexShrink: 0 }} />
                     <span className="truncate">{c.name}</span>
                     {selected?.code === c.code && (
                       <Check size={12} strokeWidth={2.5} className="ml-auto shrink-0" style={{ color: 'var(--accent)' }} />
@@ -565,7 +570,11 @@ export default function OnboardingPage() {
                 <span style={{ color: 'var(--fg-3)' }}>Location</span>
                 <span className="font-medium" style={{ color: 'var(--fg)' }}>
                   {answers.location?.country
-                    ? `${answers.location.country.flag} ${answers.location.country.name}`
+                    ? <>
+                        <span className={`fi fi-${answers.location.country.code.toLowerCase()} mr-1.5`}
+                              style={{ width: 16, height: 12, borderRadius: 2, display: 'inline-block', verticalAlign: 'middle' }} />
+                        {answers.location.country.name}
+                      </>
                     : '—'}
                 </span>
               </div>
