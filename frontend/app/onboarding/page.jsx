@@ -16,6 +16,7 @@ import {
   ArrowRight, Check, Sparkles, UserPlus, Search, MapPin, X,
 } from 'lucide-react';
 import AppLogo from '@/app/components/AppLogo';
+import COUNTRIES_DATA from '@/app/data/countries.json';
 
 // ─── Step indicator ────────────────────────────────────────────────────────────
 function StepBar({ step, total }) {
@@ -70,31 +71,12 @@ const TOTAL_STEPS = 4;
 
 // ─── Step 0: Location ─────────────────────────────────────────────────────────
 function LocationStep({ onNext }) {
-  const [countries,  setCountries]  = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(false);
-  const [query,      setQuery]      = useState('');
-  const [selected,   setSelected]   = useState(null); // { name, flag, code }
-  const [open,       setOpen]       = useState(false);
-  const [city,       setCity]       = useState('');
+  const [query,    setQuery]    = useState('');
+  const [selected, setSelected] = useState(null); // { name, flag, code }
+  const [open,     setOpen]     = useState(false);
+  const [city,     setCity]     = useState('');
   const inputRef = useRef(null);
   const dropRef  = useRef(null);
-
-  useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2')
-      .then(r => r.json())
-      .then(data => {
-        const sorted = data
-          .map(c => ({ name: c.name.common, flag: c.flags.emoji ?? '🏳', code: c.cca2 }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-        setCountries(sorted);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError(true);
-        setLoading(false);
-      });
-  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -103,9 +85,9 @@ function LocationStep({ onNext }) {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const filtered = countries.filter(c =>
+  const filtered = COUNTRIES_DATA.filter(c =>
     c.name.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 60);
+  );
 
   return (
     <motion.div key="location"
@@ -185,22 +167,12 @@ function LocationStep({ onNext }) {
 
               {/* List */}
               <div className="overflow-y-auto max-h-52" style={{ scrollbarWidth: 'thin' }}>
-                {loading && (
-                  <div className="py-6 text-center text-sm" style={{ color: 'var(--fg-3)' }}>
-                    Loading countries…
-                  </div>
-                )}
-                {error && (
-                  <div className="py-6 text-center text-sm" style={{ color: '#ef4444' }}>
-                    Failed to load. Check your connection.
-                  </div>
-                )}
-                {!loading && !error && filtered.length === 0 && (
+                {filtered.length === 0 && (
                   <div className="py-6 text-center text-sm" style={{ color: 'var(--fg-3)' }}>
                     No results for &ldquo;{query}&rdquo;
                   </div>
                 )}
-                {!loading && !error && filtered.map(c => (
+                {filtered.map(c => (
                   <button key={c.code} type="button"
                     onClick={() => { setSelected(c); setOpen(false); setQuery(''); }}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-left transition-colors cursor-pointer"

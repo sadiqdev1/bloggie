@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import {
-  Heart, Bookmark, Share2, MessageCircle, ArrowLeft,
+  Heart, Bookmark, Share2, MessageCircle,
   ArrowRight, MoreHorizontal, Link2,
   ChevronUp, Eye, Clock, UserPlus, Check,
 } from 'lucide-react';
@@ -289,17 +289,6 @@ export default function PostPage({ params }) {
             <div className="absolute inset-0"
                  style={{ background:'linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.6) 70%, var(--bg) 100%)' }} />
           </motion.div>
-
-          {/* Back button */}
-          <div className="absolute top-6 left-6 z-10">
-            <Link href="/blogs">
-              <motion.span whileHover={{ scale:1.06, x:-2 }} whileTap={{ scale:0.95 }}
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-medium backdrop-blur-sm cursor-pointer"
-                style={{ background:'rgba(0,0,0,0.35)', color:'rgba(255,255,255,0.85)', border:'1px solid rgba(255,255,255,0.15)' }}>
-                <ArrowLeft size={14} strokeWidth={2} /> Back
-              </motion.span>
-            </Link>
-          </div>
 
           {/* Cover meta */}
           <div className="absolute bottom-8 left-0 right-0 px-5 md:px-10 lg:px-20">
