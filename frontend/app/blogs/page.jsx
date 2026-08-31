@@ -283,21 +283,21 @@ function PostCard({ post }) {
         <div className="flex-1 min-w-0">
           <Link href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
             <h2 className="font-bold leading-snug mb-1.5 cursor-pointer transition-colors hover:text-[var(--fg-2)]"
-                style={{ color: 'var(--fg)', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', lineHeight: 1.35 }}>
+                style={{ color: 'var(--fg)', fontSize: 'clamp(1rem, 2vw, 1.2rem)', lineHeight: 1.35 }}>
               {post.title}
             </h2>
           </Link>
-          <p className="text-[0.82rem] leading-relaxed line-clamp-2 hidden sm:block"
+          <p className="text-sm leading-relaxed line-clamp-2 hidden sm:block"
              style={{ color: 'var(--fg-3)' }}>
             {post.excerpt}
           </p>
         </div>
         {post.cover && (
           <Link href={`/blog/${post.slug}`} className="shrink-0">
-            <div className="relative overflow-hidden rounded" style={{ width: 88, height: 66 }}>
+            <div className="relative overflow-hidden rounded" style={{ width: 120, height: 88 }}>
               <NextImage src={post.cover} alt={post.title} fill
                 className="object-cover hover:scale-105 transition-transform duration-500"
-                sizes="88px" loading="lazy" placeholder="blur" blurDataURL={post.blur} />
+                sizes="120px" loading="lazy" placeholder="blur" blurDataURL={post.blur} />
             </div>
           </Link>
         )}
@@ -443,7 +443,7 @@ export default function BlogsPage() {
           {filtered.length > 0 ? (
             <motion.div initial="hidden" whileInView="visible"
               viewport={{ once: true }} variants={stagger}
-              className="max-w-2xl mx-auto divide-y"
+              className="max-w-3xl mx-auto divide-y"
               style={{ borderColor: 'var(--border)' }}>
               {filtered.map(post => (
                 <PostCard key={post.slug} post={post} />

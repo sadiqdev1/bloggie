@@ -269,98 +269,6 @@ function FeedCard({ post }) {
   );
 }
 
-// ─── Right panel ─────────────────────────────────────────────────────────────
-function RightPanel() {
-  const [following, setFollowing] = useState({});
-
-  return (
-    <aside className="hidden lg:block shrink-0 sticky top-0 self-start pt-6 pb-8 px-6 border-l"
-           style={{
-             width: 260,
-             borderColor: 'var(--border)',
-             /* Same bg as navbar — white in light, dark card in dark */
-             background: 'var(--bg-card)',
-           }}>
-
-      {/* Staff Picks */}
-      <div className="mb-8">
-        <p className="text-sm font-bold mb-4" style={{ color: 'var(--fg)' }}>Staff Picks</p>
-        <div className="space-y-5">
-          {STAFF_PICKS.map((pick, i) => (
-            <div key={i} className="cursor-pointer group">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                     style={{ background: pick.publicationColor }}>
-                  {pick.publicationInitial}
-                </div>
-                <span className="text-xs font-medium" style={{ color: 'var(--fg-3)' }}>
-                  {pick.publication
-                    ? <>{pick.publication} <span style={{ color: 'var(--fg-4)' }}>by</span> {pick.author}</>
-                    : pick.author
-                  }
-                </span>
-              </div>
-              <p className="text-[0.85rem] font-bold leading-snug group-hover:opacity-75 transition-opacity"
-                 style={{ color: 'var(--fg)' }}>
-                {pick.member && <span className="mr-1" style={{ color: '#f9d71c' }}>★</span>}
-                {pick.title}
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--fg-3)' }}>{pick.time}</p>
-            </div>
-          ))}
-        </div>
-        <Link href="#" className="block mt-4 text-sm transition-colors hover:text-[var(--accent)]"
-              style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
-          See the full list
-        </Link>
-      </div>
-
-      {/* Recommended topics */}
-      <div className="mb-8">
-        <p className="text-sm font-bold mb-3" style={{ color: 'var(--fg)' }}>Recommended topics</p>
-        <div className="flex flex-wrap gap-1.5">
-          {RECOMMENDED_TOPICS.map(topic => (
-            <Link key={topic} href={`/blogs?tag=${encodeURIComponent(topic)}`}
-              className="h-7 px-3 rounded-full text-xs font-medium border cursor-pointer transition-all"
-              style={{ borderColor: 'var(--border)', background: 'var(--bg-hover)', color: 'var(--fg-2)', textDecoration: 'none' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.color = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--fg)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--fg-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
-              {topic}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Following — moved to right panel */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--fg-3)' }}>Following</p>
-        <div className="space-y-3 mb-3">
-          {FOLLOWING_LIST.map(({ name, initials, color }) => (
-            <Link key={name} href={`/${name.toLowerCase().replace(' ', '')}`}
-              className="flex items-center gap-2.5 cursor-pointer group"
-              style={{ textDecoration: 'none' }}>
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                   style={{ background: color }}>{initials}</div>
-              <span className="text-sm group-hover:underline" style={{ color: 'var(--fg-2)' }}>{name}</span>
-            </Link>
-          ))}
-        </div>
-        <Link href="/search?filter=writers"
-          className="flex items-center gap-1.5 text-xs cursor-pointer transition-colors hover:text-[var(--fg)]"
-          style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
-          <Plus size={12} strokeWidth={2} />
-          Find writers to follow
-        </Link>
-        <Link href="/search?filter=writers"
-          className="block mt-1 text-xs cursor-pointer hover:underline"
-          style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
-          See suggestions
-        </Link>
-      </div>
-    </aside>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState('foryou');
@@ -371,17 +279,24 @@ export default function ExplorePage() {
 
   return (
     <AuthLayout>
-      <div className="flex h-full" style={{ background: 'var(--bg)' }}>
+      {/*
+        Override AuthLayout's default padding by using negative margin trick.
+        AuthLayout's <main> has p-4 md:p-6 — we need full bleed here.
+        Use -m-4 md:-m-6 to cancel it, then set our own layout.
+      */}
+      <div className="-m-4 md:-m-6 -mb-20 lg:-mb-6 flex h-full min-h-0"
+           style={{ background: 'var(--bg)' }}>
 
-        {/* ── Centre feed ── */}
-        <div className="flex-1 min-w-0">
-          {/* Tabs — proper top padding */}
-          <div className="sticky top-0 z-10 border-b pt-5 pb-0 px-5 md:px-8"
+        {/* ── Centre feed — scrolls independently ── */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+
+          {/* Sticky tab bar */}
+          <div className="sticky top-0 z-10 border-b"
                style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
-            <div className="flex items-center gap-0">
+            <div className="flex items-center gap-0 px-6 md:px-10 pt-5">
               {FEED_TABS.map(({ id, label }) => (
                 <button key={id} onClick={() => setActiveTab(id)}
-                  className="relative px-0 mr-7 pb-3 text-[0.95rem] font-semibold cursor-pointer transition-colors"
+                  className="relative mr-7 pb-3.5 text-[0.95rem] font-semibold cursor-pointer transition-colors"
                   style={{ color: activeTab === id ? 'var(--fg)' : 'var(--fg-3)', background: 'none', border: 'none' }}>
                   {label}
                   {activeTab === id && (
@@ -395,8 +310,8 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          {/* Feed list */}
-          <div className="px-5 md:px-8">
+          {/* Feed */}
+          <div className="px-6 md:px-10 flex-1">
             <AnimatePresence mode="wait">
               <motion.div key={activeTab}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -415,8 +330,99 @@ export default function ExplorePage() {
           </div>
         </div>
 
-        {/* ── Right panel ── */}
-        <RightPanel />
+        {/* ── Right panel — fixed width, scrolls independently ── */}
+        <aside
+          className="hidden lg:flex flex-col overflow-y-auto border-l shrink-0"
+          style={{
+            width:       272,
+            borderColor: 'var(--border)',
+            background:  'var(--bg-card)',
+            scrollbarWidth: 'none',
+          }}>
+          <div className="px-6 py-6 space-y-8">
+
+            {/* Staff Picks */}
+            <div>
+              <p className="text-sm font-bold mb-4" style={{ color: 'var(--fg)' }}>Staff Picks</p>
+              <div className="space-y-5">
+                {STAFF_PICKS.map((pick, i) => (
+                  <div key={i} className="cursor-pointer group">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                           style={{ background: pick.publicationColor }}>
+                        {pick.publicationInitial}
+                      </div>
+                      <span className="text-xs font-medium leading-tight" style={{ color: 'var(--fg-3)' }}>
+                        {pick.publication
+                          ? <>{pick.publication} <span style={{ color: 'var(--fg-4)' }}>by</span> {pick.author}</>
+                          : pick.author}
+                      </span>
+                    </div>
+                    <p className="text-[0.85rem] font-bold leading-snug group-hover:opacity-70 transition-opacity"
+                       style={{ color: 'var(--fg)' }}>
+                      {pick.member && <span className="mr-1" style={{ color: '#f9d71c' }}>★</span>}
+                      {pick.title}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--fg-3)' }}>{pick.time}</p>
+                  </div>
+                ))}
+              </div>
+              <Link href="#" className="block mt-4 text-sm transition-colors hover:text-[var(--accent)]"
+                    style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
+                See the full list
+              </Link>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t" style={{ borderColor: 'var(--border)' }} />
+
+            {/* Recommended topics */}
+            <div>
+              <p className="text-sm font-bold mb-3" style={{ color: 'var(--fg)' }}>Recommended topics</p>
+              <div className="flex flex-wrap gap-1.5">
+                {RECOMMENDED_TOPICS.map(topic => (
+                  <Link key={topic} href={`/blogs?tag=${encodeURIComponent(topic)}`}
+                    className="h-7 px-3 rounded-full text-xs font-medium border cursor-pointer transition-all"
+                    style={{ borderColor: 'var(--border)', background: 'var(--bg-hover)', color: 'var(--fg-2)', textDecoration: 'none' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--fg)'; e.currentTarget.style.color = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--fg)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--fg-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
+                    {topic}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t" style={{ borderColor: 'var(--border)' }} />
+
+            {/* Following */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--fg-3)' }}>Following</p>
+              <div className="space-y-3 mb-3">
+                {FOLLOWING_LIST.map(({ name, initials, color }) => (
+                  <Link key={name} href={`/${name.toLowerCase().replace(' ', '')}`}
+                    className="flex items-center gap-2.5 cursor-pointer group"
+                    style={{ textDecoration: 'none' }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                         style={{ background: color }}>{initials}</div>
+                    <span className="text-sm group-hover:underline" style={{ color: 'var(--fg-2)' }}>{name}</span>
+                  </Link>
+                ))}
+              </div>
+              <Link href="/search?filter=writers"
+                className="flex items-center gap-1.5 text-xs cursor-pointer transition-colors hover:text-[var(--fg)]"
+                style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
+                <Plus size={12} strokeWidth={2} />
+                Find writers to follow
+              </Link>
+              <Link href="/search?filter=writers"
+                className="block mt-1 text-xs cursor-pointer hover:underline"
+                style={{ color: 'var(--fg-3)', textDecoration: 'none' }}>
+                See suggestions
+              </Link>
+            </div>
+          </div>
+        </aside>
       </div>
     </AuthLayout>
   );
