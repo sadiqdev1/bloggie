@@ -252,7 +252,7 @@ function FeedCard({ post }) {
 // ─── Right panel — Medium style ───────────────────────────────────────────────
 function RightPanel() {
   return (
-    <aside className="hidden lg:block w-72 xl:w-80 shrink-0 pl-8 border-l"
+    <aside className="hidden lg:block w-56 shrink-0 pl-6 border-l"
            style={{ borderColor: 'var(--border)' }}>
 
       {/* Staff picks */}

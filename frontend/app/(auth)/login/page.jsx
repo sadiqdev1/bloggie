@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import NextImage   from 'next/image';
 import AppLogo     from '@/app/components/AppLogo';
 import MagneticBtn from '@/app/components/ui/MagneticBtn';
-import Blob        from '@/app/components/ui/Blob';
 
 // ─── Reusable field ───────────────────────────────────────────────────────────
 function Field({ id, label, type = 'text', value, onChange, error, placeholder, autoComplete, suffix }) {
@@ -106,16 +106,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ background:'var(--bg)' }}>
+    /* h-screen + overflow-hidden = never scrolls */
+    <div className="h-screen overflow-hidden flex" style={{ background:'var(--bg)' }}>
       {/* ── Left panel — form ── */}
-      <div className="flex flex-col w-full mx-auto min-h-screen items-center px-6 py-10 lg:w-[480px] lg:mx-0 lg:shrink-0">
-        {/* Logo */}
-        <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
-          transition={{ duration:0.4 }} className="w-full max-w-sm">
-          <AppLogo size="md" />
-        </motion.div>
+      <div className="flex flex-col w-full items-center justify-center px-8 lg:w-[460px] lg:shrink-0 overflow-y-auto"
+           style={{ scrollbarWidth: 'none' }}>
 
-        <div className="flex-1 flex flex-col justify-center w-full max-w-sm py-10">
+        <div className="w-full max-w-sm">
+          {/* Logo */}
+          <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }}
+            transition={{ duration:0.4 }} className="mb-8">
+            <AppLogo size="md" />
+          </motion.div>
           <AnimatePresence mode="wait">
             {done ? (
               <motion.div key="done"
@@ -211,53 +213,42 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right panel — visual ── */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden"
-           style={{ background:'var(--bg-card)' }}>
-        <Blob className="w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{ background:'var(--accent)', opacity:0.10 }} />
+      {/* ── Right panel — full-bleed editorial photo ── */}
+      <div className="hidden lg:block flex-1 relative overflow-hidden">
+        <NextImage
+          src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1400&q=85"
+          alt="Person working on laptop"
+          fill
+          className="object-cover"
+          sizes="(min-width: 1024px) 60vw, 0px"
+          priority
+        />
+        {/* Subtle left vignette */}
+        <div className="absolute inset-0"
+             style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.02) 100%)' }} />
 
-        <div className="relative z-10 flex flex-col items-center justify-center w-full px-16">
-          {/* Testimonial card */}
+        {/* Bottom quote overlay */}
+        <div className="absolute inset-x-0 bottom-0 p-10 pt-32"
+             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.70) 0%, transparent 100%)' }}>
           <motion.div
-            initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }}
-            transition={{ duration:0.7, delay:0.3, ease:[0.16,1,0.3,1] }}
-            className="max-w-sm w-full p-8 rounded-2xl border shadow-2xl"
-            style={{ background:'var(--bg)', borderColor:'var(--border)' }}>
-            <div className="flex gap-0.5 mb-5">
-              {Array.from({length:5}).map((_,i) => (
-                <motion.svg key={i} initial={{ opacity:0, scale:0 }} animate={{ opacity:1, scale:1 }}
-                  transition={{ delay:0.5+i*0.08 }}
-                  width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)" aria-hidden="true">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </motion.svg>
-              ))}
-            </div>
-            <p className="text-base leading-relaxed mb-6 font-medium" style={{ color:'var(--fg)' }}>
-              "Bloggie is the only platform where I actually enjoy writing. The editor disappears and the ideas just flow."
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}>
+            <p className="text-white text-xl font-bold leading-snug mb-4 max-w-sm"
+               style={{ fontFamily: 'var(--font-bricolage),sans-serif' }}>
+              "Bloggie is the only platform where I actually enjoy writing. The ideas just flow."
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                   style={{ background:'#f97316' }}>SR</div>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                   style={{ background: '#f97316' }}>SR</div>
               <div>
-                <p className="text-sm font-semibold" style={{ color:'var(--fg)' }}>Sofia Reyes</p>
-                <p className="text-xs" style={{ color:'var(--fg-3)' }}>Designer & writer · 3.4k followers</p>
+                <p className="text-white text-sm font-semibold leading-none mb-0.5">Sofia Reyes</p>
+                <p className="text-white/55 text-xs">Designer & writer · 3.4k followers</p>
               </div>
             </div>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.6, duration:0.5 }}
-            className="flex items-center gap-8 mt-10">
-            {[['12K+','Writers'],['80K+','Stories'],['2M+','Monthly readers']].map(([v,l]) => (
-              <div key={l} className="text-center">
-                <p className="text-2xl font-bold tabular-nums" style={{ fontFamily:'var(--font-bricolage), sans-serif', color:'var(--accent)' }}>{v}</p>
-                <p className="text-xs mt-0.5" style={{ color:'var(--fg-4)' }}>{l}</p>
-              </div>
-            ))}
           </motion.div>
         </div>
       </div>
+
     </div>
   );
 }
