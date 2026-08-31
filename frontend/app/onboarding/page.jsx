@@ -542,14 +542,14 @@ export default function OnboardingPage() {
       </div>
 
       {/* ── RIGHT — progress panel ── */}
-      <div className="hidden lg:flex flex-1 flex-col justify-center px-16 border-l relative overflow-hidden"
+      <div className="hidden lg:flex flex-1 flex-col items-center justify-center border-l relative overflow-hidden"
            style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
 
         {/* Subtle background glow */}
         <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
              style={{ background: 'var(--accent)', opacity: 0.04, filter: 'blur(80px)', transform: 'translate(30%, -30%)' }} />
 
-        <div className="relative z-10 max-w-xs">
+        <div className="relative z-10 w-full max-w-xs px-4">
           {/* Step list */}
           <div className="space-y-5 mb-10">
             {STEP_LABELS.map((label, i) => {

@@ -94,7 +94,7 @@ const STAFF_PICKS = [
   {
     publication: 'In The Acade…',
     publicationInitial: 'A',
-    publicationColor: '#1a1a1a',
+    publicationColor: 'var(--accent)',
     author: 'Malynnda Stewart, PhD, B…',
     title: 'Floaties, Not Shorelines: What We Get Wrong About Helping Someone Grieve',
     time: '5d ago',
@@ -103,7 +103,7 @@ const STAFF_PICKS = [
   {
     publication: 'In The Medium Bl…',
     publicationInitial: 'M',
-    publicationColor: '#1a1a1a',
+    publicationColor: '#8b5cf6',
     author: 'The Medium Newslett…',
     title: 'Dolly Parton, Joan Rivers, and the power of mischief',
     time: 'Jul 18, 2025',
@@ -236,9 +236,9 @@ function FeedCard({ post }) {
           <button
             onClick={() => setSaved(s => !s)}
             className="cursor-pointer transition-colors"
-            style={{ color: saved ? 'var(--fg)' : 'var(--fg-4)' }}>
+            style={{ color: saved ? 'var(--accent)' : 'var(--fg-4)' }}>
             <Bookmark size={14} strokeWidth={1.8}
-              style={{ fill: saved ? 'var(--fg)' : 'none' }} />
+              style={{ fill: saved ? 'var(--accent)' : 'none', color: 'inherit' }} />
           </button>
           <button className="cursor-pointer transition-colors hover:text-[var(--fg-2)]">
             <MoreHorizontal size={15} strokeWidth={1.8} />
@@ -264,7 +264,7 @@ function RightPanel() {
               {/* Author row */}
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                     style={{ background: pick.publicationColor === '#1a1a1a' ? 'var(--fg)' : pick.publicationColor }}>
+                     style={{ background: pick.publicationColor }}>
                   {pick.publicationInitial}
                 </div>
                 {pick.publication
